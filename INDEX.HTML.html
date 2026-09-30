@@ -1,0 +1,2380 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>BioMoveLab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap">
+<style>
+:root {
+  --bg: #070B12;
+  --bg2: #0D1220;
+  --bg3: #121929;
+  --bg4: #192236;
+  --border: rgba(0,229,204,0.08);
+  --border2: rgba(0,229,204,0.2);
+  --accent: #00E5CC;
+  --accent-dim: rgba(0,229,204,0.12);
+  --accent2: #7C3AED;
+  --accent2-dim: rgba(124,58,237,0.15);
+  --red: #FF4757;
+  --green: #00D4A0;
+  --warn: #FFAA00;
+  --text: #E8F0FE;
+  --text2: #7B8DB0;
+  --text3: #3D4F70;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Inter', sans-serif;
+  --display: 'Syne', sans-serif;
+  --glow: 0 0 40px rgba(0,229,204,0.12);
+  --glow2: 0 0 40px rgba(124,58,237,0.2);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #F0F4FF;
+    --bg2: #FFFFFF;
+    --bg3: #E8EDF8;
+    --bg4: #DCE3F5;
+    --border: rgba(0,150,140,0.12);
+    --border2: rgba(0,150,140,0.3);
+    --accent: #00A693;
+    --accent-dim: rgba(0,166,147,0.1);
+    --accent2: #6D28D9;
+    --accent2-dim: rgba(109,40,217,0.1);
+    --text: #0D1220;
+    --text2: #4A5880;
+    --text3: #A0ADCC;
+    --glow: 0 0 40px rgba(0,150,140,0.1);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #F0F4FF;
+  --bg2: #FFFFFF;
+  --bg3: #E8EDF8;
+  --bg4: #DCE3F5;
+  --border: rgba(0,150,140,0.12);
+  --border2: rgba(0,150,140,0.3);
+  --accent: #00A693;
+  --accent-dim: rgba(0,166,147,0.1);
+  --accent2: #6D28D9;
+  --accent2-dim: rgba(109,40,217,0.1);
+  --text: #0D1220;
+  --text2: #4A5880;
+  --text3: #A0ADCC;
+  --glow: 0 0 40px rgba(0,150,140,0.1);
+  color-scheme: light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--sans)}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* ── LAYOUT ── */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:64px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;padding:0;
+  transition:width .25s cubic-bezier(.4,0,.2,1);overflow:hidden;flex-shrink:0;
+  position:relative;z-index:10;
+}
+#sidebar.open{width:220px;align-items:flex-start}
+.sb-logo{
+  width:100%;padding:18px 0;display:flex;align-items:center;justify-content:center;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+#sidebar.open .sb-logo{justify-content:flex-start;padding:18px 16px;gap:10px}
+.sb-icon-wrap{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--glow);
+}
+.sb-icon-wrap svg{width:18px;height:18px}
+.sb-name{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.02em;white-space:nowrap;color:var(--text)}
+.sb-tagline{font-size:9px;font-family:var(--mono);color:var(--text3);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.sb-nav{flex:1;width:100%;padding:12px 0;display:flex;flex-direction:column;gap:2px}
+.sb-item{
+  width:100%;height:44px;display:flex;align-items:center;gap:12px;
+  padding:0 14px;cursor:pointer;transition:background .15s,color .15s;
+  border-left:2px solid transparent;color:var(--text3);position:relative;
+  white-space:nowrap;
+}
+.sb-item:hover{background:var(--accent-dim);color:var(--text2)}
+.sb-item.active{background:var(--accent-dim);color:var(--accent);border-left-color:var(--accent)}
+.sb-item svg{width:18px;height:18px;flex-shrink:0}
+.sb-label{font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s}
+#sidebar.open .sb-label{opacity:1}
+.sb-bottom{width:100%;padding:12px 0;border-top:1px solid var(--border)}
+.sb-toggle{
+  width:100%;height:40px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text3);transition:color .15s;
+}
+#sidebar.open .sb-toggle{justify-content:flex-start;padding:0 16px;gap:12px}
+.sb-toggle:hover{color:var(--accent)}
+.sb-toggle svg{width:18px;height:18px;flex-shrink:0}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{
+  height:56px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;
+}
+#topbar-title{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.03em;flex:1}
+.topbar-search{
+  display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;padding:0 12px;height:34px;min-width:200px;
+}
+.topbar-search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:var(--sans);width:100%}
+.topbar-search input::placeholder{color:var(--text3)}
+.topbar-btn{
+  height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);cursor:pointer;font-size:13px;font-family:var(--sans);
+  display:flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;
+}
+.topbar-btn:hover{border-color:var(--accent);color:var(--accent)}
+.topbar-btn.primary{background:var(--accent);border-color:var(--accent);color:#07161A;font-weight:600}
+.topbar-btn.primary:hover{background:var(--text);border-color:var(--text);color:#07161A}
+#content{flex:1;overflow-y:auto;overflow-x:hidden}
+.view{display:none;padding:28px 24px 40px}
+.view.active{display:block}
+
+/* ── GRID STATS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:800px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr}}
+.stat-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px 20px;display:flex;flex-direction:column;gap:6px;
+}
+.stat-label{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.stat-val{font-family:var(--display);font-size:28px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.stat-val.accent{color:var(--accent)}
+.stat-val.accent2{color:var(--accent2)}
+.stat-sub{font-size:11px;color:var(--text3)}
+
+/* ── SECTION HEADER ── */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-family:var(--display);font-weight:700;font-size:15px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:10px;font-family:var(--mono);letter-spacing:.05em}
+.badge-ai{background:var(--accent2-dim);color:var(--accent2);border:1px solid rgba(124,58,237,.3)}
+.badge-success{background:rgba(0,212,160,.1);color:var(--green)}
+.badge-warn{background:rgba(255,170,0,.1);color:var(--warn)}
+.badge-danger{background:rgba(255,71,87,.1);color:var(--red)}
+
+/* ── CMD BAR ── */
+.cmd-bar{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;margin-bottom:24px;display:flex;align-items:center;gap:10px;
+}
+.cmd-bar-prefix{font-family:var(--mono);color:var(--accent);font-size:13px;flex-shrink:0}
+.cmd-bar input{
+  flex:1;background:none;border:none;outline:none;color:var(--text);
+  font-family:var(--mono);font-size:13px;
+}
+.cmd-bar input::placeholder{color:var(--text3)}
+.cmd-submit{
+  background:var(--accent);color:#07161A;border:none;border-radius:8px;
+  padding:6px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:var(--sans);
+  white-space:nowrap;
+}
+.cmd-submit:hover{background:#00FFE0}
+
+/* ── PATIENT TABLE ── */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-head{display:grid;grid-template-columns:1fr 100px 120px 80px 60px;gap:0;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.th{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.table-row{
+  display:grid;grid-template-columns:1fr 100px 120px 80px 60px;gap:0;
+  padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background .12s;align-items:center;
+}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:var(--accent-dim)}
+.td{font-size:13px;color:var(--text2)}
+.td.name{color:var(--text);font-weight:500}
+.td.val{font-family:var(--mono);color:var(--accent);font-size:12px}
+.paid-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.media-count{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:13px;color:var(--text3)}
+.pag-btns{display:flex;gap:6px}
+.pag-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.pag-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.pag-btn:disabled{opacity:.3;cursor:default}
+.pag-btn.active{background:var(--accent);border-color:var(--accent);color:#07161A;font-weight:700}
+
+/* ── API KEY BANNER ── */
+.api-banner{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.api-banner label{font-size:12px;color:var(--text2);white-space:nowrap}
+.api-input{
+  flex:1;min-width:200px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;padding:6px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;
+}
+.api-input:focus{border-color:var(--accent2)}
+.api-save-btn{
+  background:var(--accent2-dim);border:1px solid rgba(124,58,237,.4);
+  color:var(--accent2);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:var(--sans);
+  white-space:nowrap;
+}
+.api-save-btn:hover{background:var(--accent2);color:#fff}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(7,11,18,.85);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:20px;
+  width:100%;max-width:700px;max-height:90vh;display:flex;flex-direction:column;
+  box-shadow:0 24px 80px rgba(0,0,0,.6),var(--glow);overflow:hidden;
+}
+.modal-header{
+  padding:20px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.modal-title{font-family:var(--display);font-weight:800;font-size:18px}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);cursor:pointer;font-size:18px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{flex:1;overflow-y:auto;padding:24px}
+.modal-footer{
+  padding:16px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;
+}
+
+/* ── WIZARD STEPPER ── */
+.wizard-steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.wizard-step{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);
+  font-family:var(--mono);letter-spacing:.05em;flex:1;
+}
+.wizard-step:last-child{flex:0}
+.step-num{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--text3);
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:700;flex-shrink:0;transition:all .2s;
+}
+.wizard-step.active .step-num{border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px rgba(0,229,204,.3)}
+.wizard-step.done .step-num{background:var(--accent);border-color:var(--accent);color:#07161A}
+.wizard-step.active .step-label{color:var(--accent)}
+.step-label{white-space:nowrap}
+.wizard-line{flex:1;height:1px;background:var(--border);margin:0 8px}
+.wizard-step.done + .wizard-line,
+.wizard-step.active + .wizard-line{background:var(--accent)}
+
+/* ── FORM FIELDS ── */
+.field-group{margin-bottom:18px}
+.field-label{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:block}
+.field-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;
+  transition:border-color .15s;
+}
+.field-input:focus{border-color:var(--accent)}
+.field-input::placeholder{color:var(--text3)}
+textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.field-row{grid-template-columns:1fr}}
+
+/* ── MEDIA UPLOAD ZONE ── */
+.media-zone{
+  border:2px dashed var(--border2);border-radius:16px;
+  padding:32px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;background:var(--accent-dim);
+  margin-bottom:16px;
+}
+.media-zone:hover,.media-zone.drag{border-color:var(--accent);background:rgba(0,229,204,.08)}
+.media-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.zone-icon{margin:0 auto 10px;width:40px;height:40px;border-radius:12px;background:var(--accent2-dim);display:flex;align-items:center;justify-content:center}
+.zone-icon svg{width:20px;height:20px;color:var(--accent2)}
+.zone-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.zone-sub{font-size:12px;color:var(--text3)}
+
+/* ── MEDIA TYPE TABS ── */
+.media-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.media-tab{
+  padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;font-size:12px;
+  font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:6px;
+}
+.media-tab:hover{border-color:var(--border2);color:var(--text2)}
+.media-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+
+/* ── MEDIA PREVIEW GRID ── */
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-top:14px}
+.media-thumb{
+  aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;
+  border:1px solid var(--border);background:var(--bg3);cursor:pointer;
+}
+.media-thumb img,.media-thumb video{width:100%;height:100%;object-fit:cover}
+.media-thumb-badge{
+  position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.7);
+  border-radius:4px;padding:2px 5px;font-size:9px;font-family:var(--mono);color:#fff;
+}
+.media-thumb-del{
+  position:absolute;top:4px;right:4px;width:20px;height:20px;
+  background:rgba(255,71,87,.8);border-radius:50%;display:flex;align-items:center;
+  justify-content:center;opacity:0;transition:opacity .15s;cursor:pointer;border:none;
+}
+.media-thumb:hover .media-thumb-del{opacity:1}
+
+/* ── AI ANALYSIS BLOCK ── */
+.ai-block{
+  background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(0,229,204,.05));
+  border:1px solid rgba(124,58,237,.3);border-radius:14px;
+  padding:16px 18px;margin-top:12px;
+}
+.ai-block-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ai-pulse{
+  width:8px;height:8px;border-radius:50%;background:var(--accent2);
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+.ai-block-title{font-size:12px;font-family:var(--mono);color:var(--accent2);letter-spacing:.06em}
+.ai-block-body{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap}
+.ai-progress{height:2px;background:var(--bg3);border-radius:1px;overflow:hidden;margin-bottom:10px}
+.ai-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0;transition:width .3s;border-radius:1px}
+
+/* ── PATIENT DETAIL MODAL TABS ── */
+.dtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.dtab{
+  padding:10px 18px;font-size:13px;font-weight:500;color:var(--text3);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;
+  white-space:nowrap;
+}
+.dtab:hover{color:var(--text2)}
+.dtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.dtab-content{display:none}
+.dtab-content.active{display:block}
+
+/* ── GONIOMETRY ── */
+.gonio-wrap{position:relative;display:inline-block;cursor:crosshair}
+.gonio-wrap img{border-radius:10px;display:block}
+.gonio-wrap canvas{position:absolute;inset:0;pointer-events:none}
+.gonio-overlay{position:absolute;inset:0;cursor:crosshair}
+
+/* ── PAYMENTS ── */
+.pay-row{
+  display:grid;grid-template-columns:1fr 80px 100px 90px 60px;
+  padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;
+  gap:0;
+}
+.pay-row:last-child{border-bottom:none}
+
+/* ── REPORT ── */
+.report-block{
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text);
+  font-family:var(--sans);
+}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border2);
+  color:var(--text);font-size:13px;padding:10px 18px;border-radius:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:9999;
+  opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--text3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text2)}
+
+/* ── UTILITY ── */
+.flex{display:flex}.gap-8{gap:8px}.gap-12{gap:12px}.items-center{align-items:center}.justify-between{justify-content:space-between}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-mono{font-family:var(--mono)}.text-accent{color:var(--accent)}.text-muted{color:var(--text3)}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:9px;
+  border:1px solid var(--border);background:transparent;color:var(--text2);
+  cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500;transition:all .15s;
+}
+.btn:hover{border-color:var(--border2);color:var(--text)}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:#07161A;font-weight:600}
+.btn-accent:hover{background:#00FFE0;border-color:#00FFE0}
+.btn-violet{background:var(--accent2-dim);border-color:rgba(124,58,237,.4);color:var(--accent2)}
+.btn-violet:hover{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.btn-danger{background:rgba(255,71,87,.1);border-color:rgba(255,71,87,.3);color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sm{padding:5px 12px;font-size:12px}
+</style>
+
+<!-- ===== HTML ===== -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <span class="sb-name">BioMoveLab</span>
+        <span class="sb-tagline">Clinical AI</span>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="sb-label">Dashboard</span>
+      </div>
+      <div class="sb-item" data-view="patients">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="sb-label">Pacientes</span>
+      </div>
+      <div class="sb-item" data-view="payments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span class="sb-label">Pagamentos</span>
+      </div>
+      <div class="sb-item" data-view="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="sb-label">Relatórios IA</span>
+      </div>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        <span class="sb-label" style="font-size:12px;color:var(--text3)">Recolher</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="topbar">
+      <span id="topbar-title">Dashboard</span>
+      <div class="topbar-search" id="search-wrap" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Buscar paciente..." oninput="onSearch()">
+      </div>
+      <button class="topbar-btn" onclick="toggleTheme()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        Tema
+      </button>
+      <button class="topbar-btn" onclick="openFichaModal()" style="border-color:rgba(124,58,237,.4);color:var(--accent2)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Ler Ficha
+      </button>
+      <button class="topbar-btn primary" onclick="openNewPatientModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Paciente
+      </button>
+    </div>
+
+    <div id="content">
+      <!-- DASHBOARD -->
+      <div class="view active" id="view-dashboard">
+        <div class="api-banner" style="flex-wrap:wrap;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent2);flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <label>Chave API:</label>
+          <input type="password" class="api-input" id="api-key-input" placeholder="sk-ant-..." oninput="saveApiKey()" style="min-width:160px;flex:1">
+          <label style="margin-left:4px">Worker URL:</label>
+          <input type="text" class="api-input" id="worker-url-input" placeholder="https://seu-worker.workers.dev" oninput="saveWorkerUrl()" style="min-width:200px;flex:2">
+          <button class="api-save-btn" onclick="saveApiKey();saveWorkerUrl();showToast('Configurações salvas!')">Salvar</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total de Pacientes</div>
+            <div class="stat-val" id="stat-total">0</div>
+            <div class="stat-sub">cadastrados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Recebido este mês</div>
+            <div class="stat-val accent" id="stat-recebido">R$0</div>
+            <div class="stat-sub" id="stat-recebido-sub">0 pagamentos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pendentes</div>
+            <div class="stat-val" id="stat-pendentes" style="color:var(--warn)">0</div>
+            <div class="stat-sub">sem pagamento</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Relatórios IA</div>
+            <div class="stat-val accent2" id="stat-relatorios">0</div>
+            <div class="stat-sub">gerados</div>
+          </div>
+        </div>
+        <!-- Ler Ficha Card -->
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(0,229,204,.06));border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:18px 20px;margin-bottom:16px;cursor:pointer" onclick="openFichaModal()">
+          <div class="flex items-center gap-12" style="flex-wrap:wrap;gap:16px">
+            <div style="width:48px;height:48px;border-radius:12px;background:var(--accent2-dim);border:1px solid rgba(124,58,237,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent2)"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div style="flex:1;min-width:180px">
+              <div style="font-family:var(--display);font-weight:700;font-size:15px;margin-bottom:3px">Ler Ficha de Cadastro</div>
+              <div style="font-size:13px;color:var(--text2)">Fotografe a ficha impressa preenchida · A IA extrai os dados e cadastra automaticamente</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
+              <span class="badge badge-ai">IA · OCR Visual</span>
+              <button class="btn btn-violet btn-sm" style="pointer-events:none">Importar Ficha →</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+          <div class="flex items-center gap-8" style="margin-bottom:12px">
+            <span class="sec-title">Comando Rápido</span>
+            <span class="badge badge-ai">CLI</span>
+          </div>
+          <div class="cmd-bar">
+            <span class="cmd-bar-prefix">$</span>
+            <input type="text" id="cmd-input" placeholder='pagar [nome] [sobrenome] [valor opcional]' onkeydown="if(event.key==='Enter')processarCmd()">
+            <button class="cmd-submit" onclick="processarCmd()">Executar</button>
+          </div>
+          <div id="cmd-result" style="font-size:13px;color:var(--text2);font-family:var(--mono);min-height:18px"></div>
+        </div>
+      </div>
+
+      <!-- PATIENTS -->
+      <div class="view" id="view-patients">
+        <div class="sec-header">
+          <span class="sec-title">Pacientes</span>
+          <span class="badge badge-ai" id="patient-count-badge">0 pacientes</span>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <div class="th">Paciente</div>
+            <div class="th">Nascimento</div>
+            <div class="th">Queixa</div>
+            <div class="th">Valor</div>
+            <div class="th">Status</div>
+          </div>
+          <div id="patient-list"></div>
+        </div>
+        <div class="pagination">
+          <span id="pag-info" style="font-size:12px;font-family:var(--mono)">—</span>
+          <div class="pag-btns" id="pag-btns"></div>
+        </div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div class="view" id="view-payments">
+        <div class="sec-header"><span class="sec-title">Pagamentos</span></div>
+        <div class="table-wrap">
+          <div class="table-head pay-row">
+            <div class="th">Paciente</div>
+            <div class="th">Valor</div>
+            <div class="th">Mês</div>
+            <div class="th">Data</div>
+            <div class="th">Recibo</div>
+          </div>
+          <div id="payments-list"></div>
+        </div>
+        <div id="payments-empty" style="text-align:center;padding:48px;color:var(--text3);font-size:14px;display:none">Nenhum pagamento registrado ainda.</div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="view" id="view-reports">
+        <div class="sec-header">
+          <span class="sec-title">Relatórios IA</span>
+          <span class="badge badge-ai">Claude Opus</span>
+        </div>
+        <div id="reports-list"></div>
+        <div id="reports-empty" style="text-align:center;padding:48px;color:var(--text3);font-size:14px;display:none">Nenhum relatório gerado ainda. Abra um paciente e gere o relatório.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: NOVO PACIENTE (WIZARD) ===== -->
+<div class="modal-overlay" id="modal-new">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Novo Paciente</div>
+        <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px">BioMoveLab · Cadastro + Análise IA</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-new')">×</button>
+    </div>
+    <div class="modal-body" id="wizard-body">
+      <!-- Stepper -->
+      <div class="wizard-steps" id="wizard-steps">
+        <div class="wizard-step active" id="wstep-1">
+          <div class="step-num">1</div>
+          <span class="step-label">Dados</span>
+        </div>
+        <div class="wizard-line"></div>
+        <div class="wizard-step" id="wstep-2">
+          <div class="step-num">2</div>
+          <span class="step-label">Mídia</span>
+        </div>
+        <div class="wizard-line"></div>
+        <div class="wizard-step" id="wstep-3">
+          <div class="step-num">3</div>
+          <span class="step-label">IA</span>
+        </div>
+        <div class="wizard-line"></div>
+        <div class="wizard-step" id="wstep-4">
+          <div class="step-num">4</div>
+          <span class="step-label">Revisar</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Dados básicos -->
+      <div id="wizard-step-1">
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Nome completo *</label>
+            <input type="text" class="field-input" id="nw-nome" placeholder="Nome do paciente">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Data de nascimento</label>
+            <input type="date" class="field-input" id="nw-nasc">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">CPF</label>
+            <input type="text" class="field-input" id="nw-cpf" placeholder="000.000.000-00">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Telefone</label>
+            <input type="text" class="field-input" id="nw-tel" placeholder="(00) 00000-0000">
+          </div>
+        </div>
+        <!-- Endereço -->
+        <div class="field-row">
+          <div class="field-group" style="flex:0 0 140px">
+            <label class="field-label">CEP</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" class="field-input" id="nw-cep" placeholder="00000-000" maxlength="9" oninput="maskCep(this)" onblur="buscarCep('nw')">
+              <button type="button" class="btn btn-sm btn-violet" onclick="buscarCep('nw')" title="Buscar CEP" style="padding:0 10px;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Logradouro</label>
+            <input type="text" class="field-input" id="nw-logradouro" placeholder="Rua / Av...">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="flex:0 0 100px">
+            <label class="field-label">Número</label>
+            <input type="text" class="field-input" id="nw-numero" placeholder="Nº">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Complemento</label>
+            <input type="text" class="field-input" id="nw-complemento" placeholder="Apto, bloco...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Bairro</label>
+            <input type="text" class="field-input" id="nw-bairro" placeholder="Bairro">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Cidade</label>
+            <input type="text" class="field-input" id="nw-cidade" placeholder="Cidade">
+          </div>
+          <div class="field-group" style="flex:0 0 70px">
+            <label class="field-label">UF</label>
+            <input type="text" class="field-input" id="nw-uf" placeholder="UF" maxlength="2">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Queixa principal</label>
+          <input type="text" class="field-input" id="nw-queixa" placeholder="Ex: Lombalgia com irradiação para MID">
+        </div>
+        <div class="field-group">
+          <label class="field-label">História patológica pregressa</label>
+          <textarea class="field-input" id="nw-hpp" placeholder="Cirurgias anteriores, medicamentos em uso, comorbidades..."></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Valor da sessão (R$)</label>
+            <input type="number" class="field-input" id="nw-valor" value="160" min="0">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Vencimento</label>
+            <input type="text" class="field-input" id="nw-venc" placeholder="Ex: dia 10">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Mídia -->
+      <div id="wizard-step-2" style="display:none">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Adicione fotos, vídeos ou áudio do paciente. A IA analisará automaticamente na próxima etapa.
+        </div>
+        <div class="media-tabs">
+          <button class="media-tab active" onclick="setMediaTab('all',this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Todos
+          </button>
+          <button class="media-tab" onclick="setMediaTab('image',this)">
+            📷 Foto
+          </button>
+          <button class="media-tab" onclick="setMediaTab('video',this)">
+            🎬 Vídeo
+          </button>
+          <button class="media-tab" onclick="setMediaTab('audio',this)">
+            🎙️ Áudio
+          </button>
+        </div>
+
+        <!-- Imagem -->
+        <div class="media-zone" id="zone-image">
+          <input type="file" accept="image/*" multiple onchange="handleNewMediaUpload(event,'image')">
+          <div class="zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div class="zone-title">Adicionar Foto</div>
+          <div class="zone-sub">JPG, PNG, WEBP · Posturas, amplitude de movimento</div>
+        </div>
+
+        <!-- Vídeo -->
+        <div class="media-zone" id="zone-video">
+          <input type="file" accept="video/*" multiple onchange="handleNewMediaUpload(event,'video')">
+          <div class="zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+          <div class="zone-title">Adicionar Vídeo</div>
+          <div class="zone-sub">MP4, MOV · Marcha, exercícios, movimento funcional</div>
+        </div>
+
+        <!-- Áudio -->
+        <div class="media-zone" id="zone-audio">
+          <input type="file" accept="audio/*" onchange="handleNewMediaUpload(event,'audio')">
+          <div class="zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+          <div class="zone-title">Upload de Áudio</div>
+          <div class="zone-sub">MP3, M4A, WAV · Descrição clínica por voz</div>
+        </div>
+
+        <!-- Também: campo de texto para descrição manual -->
+        <div class="field-group" style="margin-top:8px">
+          <label class="field-label">Ou descreva clinicamente em texto</label>
+          <textarea class="field-input" id="nw-descricao" placeholder="Descreva os achados, amplitude de movimento, postura, dor..."></textarea>
+        </div>
+
+        <!-- Preview dos arquivos selecionados -->
+        <div id="new-media-preview" style="margin-top:4px"></div>
+      </div>
+
+      <!-- Step 3: IA -->
+      <div id="wizard-step-3" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:600">Análise Automática por IA</div>
+          <span class="badge badge-ai">Claude Opus</span>
+        </div>
+        <div id="ai-step-status" style="font-size:13px;color:var(--text2);margin-bottom:14px">
+          Clique em "Analisar com IA" para processar todos os dados inseridos.
+        </div>
+        <button class="btn btn-violet" id="btn-run-ai" onclick="runWizardAI()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Analisar com IA
+        </button>
+
+        <!-- AI results -->
+        <div id="ai-results" style="margin-top:16px;display:none">
+          <div class="ai-block">
+            <div class="ai-block-header">
+              <div class="ai-pulse"></div>
+              <span class="ai-block-title">ANÁLISE CLÍNICA · BioMoveLab IA</span>
+            </div>
+            <div class="ai-progress"><div class="ai-progress-bar" id="ai-prog-bar"></div></div>
+            <div class="ai-block-body" id="ai-result-text"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <div style="font-size:12px;font-family:var(--mono);color:var(--text3);letter-spacing:.06em;margin-bottom:10px">CAMPOS PREENCHIDOS AUTOMATICAMENTE</div>
+            <div class="field-group">
+              <label class="field-label">Hipótese Diagnóstica</label>
+              <textarea class="field-input" id="nw-diagnostico" placeholder="A IA preencherá após análise..." style="min-height:70px"></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Plano de Tratamento</label>
+              <textarea class="field-input" id="nw-plano" placeholder="A IA preencherá após análise..." style="min-height:70px"></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Observações Clínicas</label>
+              <textarea class="field-input" id="nw-obs" placeholder="A IA preencherá após análise..." style="min-height:70px"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Revisar -->
+      <div id="wizard-step-4" style="display:none">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Confirme os dados antes de salvar o paciente.</div>
+        <div id="wizard-review" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px 18px;font-size:13px;line-height:1.8"></div>
+        <div id="wizard-review-media" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="wizard-back-btn" onclick="wizardBack()" style="display:none">← Voltar</button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="closeModal('modal-new')">Cancelar</button>
+      <button class="btn btn-accent" id="wizard-next-btn" onclick="wizardNext()">Próximo →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: DETALHE PACIENTE ===== -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal-box" style="max-width:720px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="detail-nome">—</div>
+        <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px" id="detail-meta">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-detail')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="dtabs">
+        <div class="dtab active" onclick="setDTab('dados',this)">Dados</div>
+        <div class="dtab" onclick="setDTab('midia',this)">Mídia</div>
+        <div class="dtab" onclick="setDTab('audio',this)">Áudio IA</div>
+        <div class="dtab" onclick="setDTab('relatorio',this)">Relatório</div>
+      </div>
+
+      <!-- Tab: Dados -->
+      <div class="dtab-content active" id="dtab-dados">
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Nome</label>
+            <input type="text" class="field-input" id="d-nome">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Nascimento</label>
+            <input type="date" class="field-input" id="d-nasc">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">CPF</label>
+            <input type="text" class="field-input" id="d-cpf">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Telefone</label>
+            <input type="text" class="field-input" id="d-tel">
+          </div>
+        </div>
+        <!-- Endereço detalhe -->
+        <div class="field-row">
+          <div class="field-group" style="flex:0 0 150px">
+            <label class="field-label">CEP</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" class="field-input" id="d-cep" placeholder="00000-000" maxlength="9" oninput="maskCep(this)" onblur="buscarCep('d')">
+              <button type="button" class="btn btn-sm btn-violet" onclick="buscarCep('d')" style="padding:0 10px;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Logradouro</label>
+            <input type="text" class="field-input" id="d-logradouro">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="flex:0 0 100px">
+            <label class="field-label">Número</label>
+            <input type="text" class="field-input" id="d-numero">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Complemento</label>
+            <input type="text" class="field-input" id="d-complemento">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Bairro</label>
+            <input type="text" class="field-input" id="d-bairro">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Cidade</label>
+            <input type="text" class="field-input" id="d-cidade">
+          </div>
+          <div class="field-group" style="flex:0 0 70px">
+            <label class="field-label">UF</label>
+            <input type="text" class="field-input" id="d-uf" maxlength="2">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Queixa principal</label>
+          <input type="text" class="field-input" id="d-queixa">
+        </div>
+        <div class="field-group">
+          <label class="field-label">HPP</label>
+          <textarea class="field-input" id="d-hpp"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Hipótese Diagnóstica</label>
+          <textarea class="field-input" id="d-diag"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Plano de Tratamento</label>
+          <textarea class="field-input" id="d-plano"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Observações</label>
+          <textarea class="field-input" id="d-obs"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Valor (R$)</label>
+            <input type="number" class="field-input" id="d-valor">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Vencimento</label>
+            <input type="text" class="field-input" id="d-venc">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Mídia -->
+      <div class="dtab-content" id="dtab-midia">
+        <div class="media-zone">
+          <input type="file" accept="image/*,video/*" multiple onchange="handleDetailMediaUpload(event)">
+          <div class="zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="zone-title">Upload de Foto / Vídeo</div>
+          <div class="zone-sub">Clique ou arraste arquivos aqui</div>
+        </div>
+        <div id="detail-media-grid" class="media-grid"></div>
+        <!-- Goniometria -->
+        <div id="gonio-section" style="margin-top:16px;display:none">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+            Goniometria
+            <span class="badge badge-ai">3 pontos</span>
+          </div>
+          <div id="gonio-container" style="max-width:100%;overflow:auto"></div>
+          <div id="gonio-info" style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:8px">Clique em uma imagem abaixo para medir ângulo.</div>
+          <div id="gonio-result" style="margin-top:10px;display:none" class="ai-block"></div>
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-sm" onclick="clearGonio()">Limpar pontos</button>
+            <button class="btn btn-sm btn-violet" onclick="analyzeGonio()">Analisar Ângulo com IA</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Áudio IA -->
+      <div class="dtab-content" id="dtab-audio">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Grave ou faça upload de áudio com a descrição clínica. A IA interpreta e preenche os campos automaticamente.</div>
+        <div class="media-zone">
+          <input type="file" accept="audio/*" id="detail-audio-upload" onchange="handleDetailAudio(event)">
+          <div class="zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+          <div class="zone-title">Upload de Áudio Clínico</div>
+          <div class="zone-sub" id="detail-audio-fname">MP3, WAV, M4A · Descreva os achados</div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Ou descreva textualmente</label>
+          <textarea class="field-input" id="d-audio-text" placeholder="Digite ou cole a transcrição / descrição clínica..." style="min-height:100px"></textarea>
+        </div>
+        <button class="btn btn-violet" onclick="processDetailAudio()" id="btn-proc-audio">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Interpretar e Preencher Campos
+        </button>
+        <div id="detail-audio-result" style="display:none;margin-top:14px" class="ai-block">
+          <div class="ai-block-header"><div class="ai-pulse"></div><span class="ai-block-title">INTERPRETAÇÃO CLÍNICA</span></div>
+          <div class="ai-progress"><div class="ai-progress-bar" id="detail-audio-bar"></div></div>
+          <div class="ai-block-body" id="detail-audio-result-text"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Relatório -->
+      <div class="dtab-content" id="dtab-relatorio">
+        <div class="flex gap-8" style="margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-violet" onclick="generateReport()" id="btn-gen-report">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Gerar Relatório Cinesiológico-Funcional
+          </button>
+          <button class="btn btn-sm" onclick="copyReport()">Copiar</button>
+        </div>
+        <div id="report-area">
+          <div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">
+            Gere o relatório baseado em evidências científicas recentes (2021–2025).
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrentPatient()">Excluir Paciente</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm" onclick="closeModal('modal-detail')">Fechar</button>
+      <button class="btn btn-accent btn-sm" onclick="savePatientEdits()">Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: LER FICHA ===== -->
+<div class="modal-overlay" id="modal-ficha">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Ler Ficha de Cadastro</div>
+        <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px">BioMoveLab · OCR Visual por IA</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-ficha')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step A: upload da foto -->
+      <div id="ficha-step-upload">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          Fotografe a ficha impressa preenchida e faça o upload abaixo. A IA lerá todos os campos visíveis e preencherá o cadastro automaticamente.
+        </div>
+        <div class="media-zone" id="ficha-drop-zone" style="border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.06);cursor:pointer" onclick="document.getElementById('ficha-img-input').click()">
+          <input type="file" accept="image/*" multiple id="ficha-img-input" onchange="handleFichaUpload(event)" style="display:none">
+          <div class="zone-icon" style="background:var(--accent2-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent2)"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div class="zone-title">Fotos da Ficha / Exames</div>
+          <div class="zone-sub">JPG, PNG · Várias páginas ou fotos de exames</div>
+        </div>
+        <!-- Grid de previews das imagens selecionadas -->
+        <div id="ficha-images-grid" style="display:none;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px"></div>
+        <button class="btn" id="btn-add-more-ficha" style="display:none;margin-bottom:12px;background:var(--bg4);color:var(--text2);font-size:12px;padding:7px 14px" onclick="document.getElementById('ficha-img-input').click()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar mais fotos
+        </button>
+        <button class="btn btn-violet" id="btn-read-ficha" style="display:none" onclick="runFichaOCR()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Ler Ficha com IA
+        </button>
+        <div id="ficha-ocr-block" style="display:none;margin-top:14px" class="ai-block">
+          <div class="ai-block-header"><div class="ai-pulse"></div><span class="ai-block-title">LENDO FICHA · OCR VISUAL</span></div>
+          <div class="ai-progress"><div class="ai-progress-bar" id="ficha-ocr-bar"></div></div>
+          <div class="ai-block-body" id="ficha-ocr-text">Analisando imagem...</div>
+        </div>
+      </div>
+
+      <!-- Step B: revisão dos campos extraídos -->
+      <div id="ficha-step-review" style="display:none">
+        <div style="font-size:13px;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Ficha lida com sucesso! Revise os dados antes de confirmar o cadastro.
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Nome completo *</label>
+            <input type="text" class="field-input" id="fr-nome">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Data de nascimento</label>
+            <input type="date" class="field-input" id="fr-nasc">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">CPF</label>
+            <input type="text" class="field-input" id="fr-cpf">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Telefone</label>
+            <input type="text" class="field-input" id="fr-tel">
+          </div>
+        </div>
+        <!-- Endereço ficha OCR -->
+        <div class="field-row">
+          <div class="field-group" style="flex:0 0 150px">
+            <label class="field-label">CEP</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" class="field-input" id="fr-cep" placeholder="00000-000" maxlength="9" oninput="maskCep(this)" onblur="buscarCep('fr')">
+              <button type="button" class="btn btn-sm btn-violet" onclick="buscarCep('fr')" style="padding:0 10px;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Logradouro</label>
+            <input type="text" class="field-input" id="fr-logradouro">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="flex:0 0 100px">
+            <label class="field-label">Número</label>
+            <input type="text" class="field-input" id="fr-numero">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Complemento</label>
+            <input type="text" class="field-input" id="fr-complemento">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Bairro</label>
+            <input type="text" class="field-input" id="fr-bairro">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Cidade</label>
+            <input type="text" class="field-input" id="fr-cidade">
+          </div>
+          <div class="field-group" style="flex:0 0 70px">
+            <label class="field-label">UF</label>
+            <input type="text" class="field-input" id="fr-uf" maxlength="2">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Profissão / Ocupação</label>
+          <input type="text" class="field-input" id="fr-profissao">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Queixa principal</label>
+          <textarea class="field-input" id="fr-queixa" style="min-height:70px"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">História patológica pregressa</label>
+          <textarea class="field-input" id="fr-hpp" style="min-height:70px"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Hipótese diagnóstica inicial (se preenchido)</label>
+          <textarea class="field-input" id="fr-diag" style="min-height:60px"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Valor da sessão (R$)</label>
+            <input type="number" class="field-input" id="fr-valor" value="160">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Vencimento</label>
+            <input type="text" class="field-input" id="fr-venc">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Escala de dor (se marcada)</label>
+          <input type="text" class="field-input" id="fr-dor" placeholder="Ex: 7/10">
+        </div>
+        <div id="fr-obs-wrap" style="display:none" class="field-group">
+          <label class="field-label">Observações adicionais lidas</label>
+          <textarea class="field-input" id="fr-obs" style="min-height:60px"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Plano de Tratamento (gerado pela IA)</label>
+          <textarea class="field-input" id="fr-plano" style="min-height:80px" placeholder="A IA preencherá após leitura da ficha..."></textarea>
+        </div>
+        <div id="fr-laudo-wrap" style="display:none;margin-top:8px">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--accent2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <div class="ai-pulse"></div>
+            Laudo Fisioterapêutico Inicial · Gerado por IA
+          </div>
+          <div id="fr-laudo-text" style="background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(0,229,204,.04));border:1px solid rgba(124,58,237,.25);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text);line-height:1.8;white-space:pre-wrap;max-height:260px;overflow-y:auto"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" id="ficha-back-btn" onclick="fichaBackToUpload()" style="display:none">← Editar Fotos</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm" onclick="closeModal('modal-ficha')">Cancelar</button>
+      <button class="btn btn-accent btn-sm" id="ficha-confirm-btn" style="display:none" onclick="confirmFichaPatient()">✓ Confirmar Cadastro</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DADOS_PLANILHA = [];
+function valorPadrao(nome){
+  const n=nome.toLowerCase();
+  if(n.includes('rosimar regina')) return 230;
+  if(n.includes('carlos roberto marinho')) return 320;
+  return 160;
+}
+
+let pacientes = [];
+let pagamentos = [];
+let currentPatientId = null;
+let currentPage = 1;
+const PAGE_SIZE = 15;
+let searchTerm = '';
+let relatoriosCount = 0;
+let gonioPoints = [];
+let gonioImg = null;
+let gonioCanvas = null;
+
+// Wizard state
+let wizardStep = 1;
+let wizardMedia = []; // {type,name,data,base64}
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+try{
+  const saved=localStorage.getItem('biomovelab_v1');
+  if(saved){
+    const d=JSON.parse(saved);
+    pacientes=d.pacientes||[];
+    pagamentos=d.pagamentos||[];
+    relatoriosCount=d.relatoriosCount||0;
+  }
+}catch(e){}
+
+function saveState(){
+  try{
+    localStorage.setItem('biomovelab_v1',JSON.stringify({
+      pacientes:pacientes.map(p=>({...p,media:p.media.map(m=>({...m,data:m.data?m.data.substring(0,200)+'...':''}))})),
+      pagamentos,relatoriosCount
+    }));
+  }catch(e){}
+}
+
+function getApiKey(){
+  return document.getElementById('api-key-input').value.trim()||
+    (()=>{try{return localStorage.getItem('bml_api_key')||''}catch(e){return ''}})();
+}
+function saveApiKey(){
+  try{localStorage.setItem('bml_api_key',document.getElementById('api-key-input').value);}catch(e){}
+}
+function getWorkerUrl(){
+  return document.getElementById('worker-url-input').value.trim()||
+    (()=>{try{return localStorage.getItem('bml_worker_url')||''}catch(e){return ''}})();
+}
+function saveWorkerUrl(){
+  try{localStorage.setItem('bml_worker_url',document.getElementById('worker-url-input').value.trim());}catch(e){}
+}
+// Retorna {url, headers} para chamar a API via Worker
+function anthropicFetchParams(apiKey){
+  const workerUrl=getWorkerUrl();
+  if(workerUrl){
+    return {
+      url: workerUrl.replace(/\/$/,''),
+      headers:{'Content-Type':'application/json','x-bml-key':apiKey,'anthropic-version':'2023-06-01'}
+    };
+  }
+  return {
+    url:'https://api.anthropic.com/v1/messages',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}
+  };
+}
+// Worker URL padrão embutido — pode ser sobrescrito pelo usuário
+const DEFAULT_WORKER_URL='https://biomovelab-proxy.dryurikopke.workers.dev';
+try{const k=localStorage.getItem('bml_api_key');if(k)document.getElementById('api-key-input').value=k;}catch(e){}
+try{
+  const w=localStorage.getItem('bml_worker_url')||DEFAULT_WORKER_URL;
+  document.getElementById('worker-url-input').value=w;
+}catch(e){document.getElementById('worker-url-input').value=DEFAULT_WORKER_URL;}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+document.querySelectorAll('.sb-item').forEach(n=>{
+  n.onclick=()=>{
+    document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    n.classList.add('active');
+    const view=n.dataset.view;
+    document.getElementById('view-'+view).classList.add('active');
+    const titles={dashboard:'Dashboard',patients:'Pacientes',payments:'Pagamentos',reports:'Relatórios IA'};
+    document.getElementById('topbar-title').textContent=titles[view];
+    document.getElementById('search-wrap').style.display=view==='patients'?'flex':'none';
+    if(view==='patients')renderPatients();
+    if(view==='payments')renderPayments();
+    if(view==='reports')renderReports();
+    if(view==='dashboard')renderDashboard();
+  };
+});
+
+function navigate(view){
+  document.querySelector(`[data-view="${view}"]`).click();
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+function toggleTheme(){
+  const r=document.documentElement;
+  if(!r.dataset.theme||r.dataset.theme==='dark')r.dataset.theme='light';
+  else r.dataset.theme='dark';
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg,dur=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const mes=new Date().toISOString().slice(0,7);
+  const pags=pagamentos.filter(p=>p.mes===mes);
+  const recebido=pags.reduce((s,p)=>s+p.valor,0);
+  document.getElementById('stat-total').textContent=pacientes.length;
+  document.getElementById('stat-recebido').textContent='R$'+recebido.toLocaleString('pt-BR',{minimumFractionDigits:0});
+  document.getElementById('stat-recebido-sub').textContent=pags.length+' pagamento(s)';
+  document.getElementById('stat-pendentes').textContent=pacientes.filter(p=>!p.pago).length;
+  document.getElementById('stat-relatorios').textContent=relatoriosCount;
+}
+
+// ============================================================
+// QUICK COMMAND
+// ============================================================
+function processarCmd(){
+  const raw=document.getElementById('cmd-input').value.trim();
+  const res=document.getElementById('cmd-result');
+  if(!raw.toLowerCase().startsWith('pagar ')){
+    res.textContent='Erro: use pagar [nome] [sobrenome] [valor opcional]';
+    res.style.color='var(--red)';return;
+  }
+  const parts=raw.replace(/^pagar\s+/i,'').trim().split(/\s+/);
+  let valorCmd=null,nomeParts=parts;
+  const last=parts[parts.length-1];
+  if(!isNaN(parseFloat(last))&&isFinite(last)){valorCmd=parseFloat(last);nomeParts=parts.slice(0,-1);}
+  if(nomeParts.length<2){res.textContent='Informe nome e sobrenome';res.style.color='var(--warn)';return;}
+  const pac=pacientes.find(p=>{
+    const pn=p.nome.toLowerCase().split(' ');
+    return nomeParts[0].toLowerCase()===pn[0]&&pn.some(pp=>pp===nomeParts[1].toLowerCase());
+  });
+  if(!pac){res.textContent='Paciente não encontrado: '+nomeParts.join(' ');res.style.color='var(--red)';return;}
+  const valor=valorCmd!=null?valorCmd:pac.valor;
+  const mes=new Date().toISOString().slice(0,7);
+  pac.pago=true;
+  pagamentos.push({id:Date.now(),pacId:pac.id,nome:pac.nome,valor,mes,data:new Date().toLocaleDateString('pt-BR'),recibo:'Sim'});
+  saveState();renderDashboard();
+  res.textContent=`✓ R$${valor.toLocaleString('pt-BR')} registrado para ${pac.nome}`;
+  res.style.color='var(--green)';
+  document.getElementById('cmd-input').value='';
+  showToast('Pagamento registrado!');
+}
+
+// ============================================================
+// PATIENTS LIST
+// ============================================================
+function onSearch(){searchTerm=document.getElementById('search-input').value.toLowerCase();currentPage=1;renderPatients();}
+
+function filteredPatients(){
+  if(!searchTerm)return pacientes;
+  return pacientes.filter(p=>p.nome.toLowerCase().includes(searchTerm)||(p.queixa||'').toLowerCase().includes(searchTerm));
+}
+
+function renderPatients(){
+  const fp=filteredPatients();
+  const total=fp.length;
+  const pages=Math.ceil(total/PAGE_SIZE)||1;
+  if(currentPage>pages)currentPage=pages;
+  const slice=fp.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
+  document.getElementById('patient-count-badge').textContent=total+' paciente'+(total!==1?'s':'');
+
+  const list=document.getElementById('patient-list');
+  list.innerHTML=slice.map(p=>`
+    <div class="table-row" onclick="openPatientDetail(${p.id})">
+      <div class="td name">${p.nome}</div>
+      <div class="td">${p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):'-'}</div>
+      <div class="td">${p.queixa||'-'}</div>
+      <div class="td val">R$${(p.valor||160).toLocaleString('pt-BR')}</div>
+      <div class="td">
+        <span class="paid-dot" style="background:${p.pago?'var(--green)':'var(--warn)'}"></span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('pag-info').textContent=`${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,total)} de ${total}`;
+  const btns=document.getElementById('pag-btns');
+  btns.innerHTML='';
+  for(let i=1;i<=pages;i++){
+    if(pages<=7||i===1||i===pages||Math.abs(i-currentPage)<=1){
+      const b=document.createElement('button');
+      b.className='pag-btn'+(i===currentPage?' active':'');
+      b.textContent=i;b.onclick=()=>{currentPage=i;renderPatients();};
+      btns.appendChild(b);
+    } else if(Math.abs(i-currentPage)===2&&pages>7){
+      const sp=document.createElement('span');sp.textContent='…';sp.style.cssText='padding:0 4px;color:var(--text3);font-size:13px';
+      btns.appendChild(sp);
+    }
+  }
+}
+
+// ============================================================
+// OPEN PATIENT DETAIL
+// ============================================================
+function openPatientDetail(id){
+  const p=pacientes.find(x=>x.id===id);
+  if(!p)return;
+  currentPatientId=id;
+  document.getElementById('detail-nome').textContent=p.nome;
+  document.getElementById('detail-meta').textContent=(p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):'s/d')+' · '+(p.queixa||'sem queixa')+(p.pago?' · ✓ Pago':' · ⚠ Pendente');
+  document.getElementById('d-nome').value=p.nome;
+  document.getElementById('d-nasc').value=p.nasc||'';
+  document.getElementById('d-cpf').value=p.cpf||'';
+  document.getElementById('d-tel').value=p.tel||'';
+  document.getElementById('d-cep').value=p.cep||'';
+  document.getElementById('d-logradouro').value=p.logradouro||'';
+  document.getElementById('d-numero').value=p.numero||'';
+  document.getElementById('d-complemento').value=p.complemento||'';
+  document.getElementById('d-bairro').value=p.bairro||'';
+  document.getElementById('d-cidade').value=p.cidade||'';
+  document.getElementById('d-uf').value=p.uf||'';
+  document.getElementById('d-queixa').value=p.queixa||'';
+  document.getElementById('d-hpp').value=p.hpp||'';
+  document.getElementById('d-diag').value=p.diagnostico||'';
+  document.getElementById('d-plano').value=p.plano||'';
+  document.getElementById('d-obs').value=p.observations||'';
+  document.getElementById('d-valor').value=p.valor||160;
+  document.getElementById('d-venc').value=p.venc||'';
+  document.getElementById('d-audio-text').value=p.audioText||'';
+  document.getElementById('report-area').innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">Gere o relatório baseado em evidências científicas recentes (2021–2025).</div>';
+  if(p.relatorio)document.getElementById('report-area').innerHTML='<div class="report-block">'+p.relatorio+'</div>';
+  setDTab('dados',document.querySelector('.dtab'));
+  renderDetailMedia(p);
+  gonioPoints=[];gonioImg=null;gonioCanvas=null;
+  document.getElementById('gonio-section').style.display='none';
+  document.getElementById('detail-audio-result').style.display='none';
+  openModal('modal-detail');
+}
+
+function setDTab(name,el){
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.dtab-content').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  else document.querySelectorAll('.dtab')[['dados','midia','audio','relatorio'].indexOf(name)].classList.add('active');
+  document.getElementById('dtab-'+name).classList.add('active');
+}
+
+function renderDetailMedia(p){
+  const grid=document.getElementById('detail-media-grid');
+  if(!p.media||!p.media.length){grid.innerHTML='';return;}
+  grid.innerHTML=p.media.map((m,i)=>`
+    <div class="media-thumb" onclick="openGonio(${p.id},${i})">
+      ${m.type==='image'?`<img src="${m.data}" loading="lazy">`:`<video src="${m.data}" muted></video>`}
+      <div class="media-thumb-badge">${m.type==='image'?'IMG':'VID'}</div>
+      <button class="media-thumb-del" onclick="event.stopPropagation();deleteMedia(${p.id},${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function handleDetailMediaUpload(event){
+  const p=pacientes.find(x=>x.id===currentPatientId);if(!p)return;
+  if(!p.media)p.media=[];
+  let loaded=0;
+  Array.from(event.target.files).forEach(file=>{
+    const fr=new FileReader();
+    fr.onload=e=>{
+      p.media.push({type:file.type.startsWith('image')?'image':'video',name:file.name,data:e.target.result});
+      loaded++;
+      if(loaded===event.target.files.length){saveState();renderDetailMedia(p);}
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+function deleteMedia(pid,idx){
+  const p=pacientes.find(x=>x.id===pid);if(!p)return;
+  p.media.splice(idx,1);saveState();renderDetailMedia(p);
+}
+
+// ============================================================
+// GONIOMETRY
+// ============================================================
+function openGonio(pid,idx){
+  const p=pacientes.find(x=>x.id===pid);
+  if(!p||!p.media[idx]||p.media[idx].type!=='image')return;
+  const sec=document.getElementById('gonio-section');
+  sec.style.display='block';
+  const container=document.getElementById('gonio-container');
+  container.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative;display:inline-block;max-width:100%';
+  const img=new Image();
+  img.src=p.media[idx].data;
+  img.style.cssText='border-radius:10px;display:block;max-width:100%;max-height:400px';
+  img.onload=()=>{
+    const cv=document.createElement('canvas');
+    cv.width=img.naturalWidth;cv.height=img.naturalHeight;
+    cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;cursor:crosshair';
+    wrap.appendChild(img);wrap.appendChild(cv);
+    gonioImg=img;gonioCanvas=cv;gonioPoints=[];
+    cv.addEventListener('click',onGonioClick);
+    drawGonio();
+  };
+  container.appendChild(wrap);
+  document.getElementById('gonio-result').style.display='none';
+  setDTab('midia',null);
+  document.querySelectorAll('.dtab')[1].classList.add('active');
+}
+
+function onGonioClick(e){
+  const rect=gonioCanvas.getBoundingClientRect();
+  const scaleX=gonioCanvas.width/rect.width;
+  const scaleY=gonioCanvas.height/rect.height;
+  const x=(e.clientX-rect.left)*scaleX;
+  const y=(e.clientY-rect.top)*scaleY;
+  if(gonioPoints.length>=3)gonioPoints=[];
+  gonioPoints.push({x,y});
+  drawGonio();
+  if(gonioPoints.length===3){
+    const ang=calcAngle(gonioPoints[0],gonioPoints[1],gonioPoints[2]);
+    document.getElementById('gonio-info').textContent=`Ângulo calculado: ${ang.toFixed(1)}°`;
+  } else {
+    document.getElementById('gonio-info').textContent=`Ponto ${gonioPoints.length}/3 marcado`;
+  }
+}
+
+function drawGonio(){
+  if(!gonioCanvas)return;
+  const ctx=gonioCanvas.getContext('2d');
+  ctx.clearRect(0,0,gonioCanvas.width,gonioCanvas.height);
+  const pts=gonioPoints;
+  if(!pts.length)return;
+  const colors=['#00E5CC','#00E5CC','#00E5CC'];
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,10,0,Math.PI*2);
+    ctx.fillStyle=colors[i];ctx.fill();
+    ctx.font='bold 14px monospace';ctx.fillStyle='#fff';
+    ctx.fillText(['A','B','C'][i],p.x+14,p.y-8);
+  });
+  if(pts.length>=2){
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);
+    ctx.strokeStyle='rgba(0,229,204,0.8)';ctx.lineWidth=2;ctx.stroke();
+  }
+  if(pts.length===3){
+    ctx.beginPath();ctx.moveTo(pts[1].x,pts[1].y);ctx.lineTo(pts[2].x,pts[2].y);
+    ctx.strokeStyle='rgba(0,229,204,0.8)';ctx.lineWidth=2;ctx.stroke();
+    const ang=calcAngle(pts[0],pts[1],pts[2]);
+    const v1={x:pts[0].x-pts[1].x,y:pts[0].y-pts[1].y};
+    const v2={x:pts[2].x-pts[1].x,y:pts[2].y-pts[1].y};
+    const a1=Math.atan2(v1.y,v1.x);const a2=Math.atan2(v2.y,v2.x);
+    const r=Math.min(50,Math.hypot(v1.x,v1.y)*0.4,Math.hypot(v2.x,v2.y)*0.4);
+    ctx.beginPath();ctx.arc(pts[1].x,pts[1].y,r,a1,a2,false);
+    ctx.strokeStyle='rgba(124,58,237,0.9)';ctx.lineWidth=2;ctx.stroke();
+    ctx.font='bold 16px monospace';ctx.fillStyle='#FFD700';
+    ctx.fillText(ang.toFixed(1)+'°',pts[1].x+r+6,pts[1].y-4);
+  }
+}
+
+function calcAngle(a,b,c){
+  const ab={x:a.x-b.x,y:a.y-b.y};
+  const cb={x:c.x-b.x,y:c.y-b.y};
+  const dot=ab.x*cb.x+ab.y*cb.y;
+  const mag=Math.sqrt(ab.x**2+ab.y**2)*Math.sqrt(cb.x**2+cb.y**2);
+  return(Math.acos(Math.min(1,Math.max(-1,dot/mag)))*180/Math.PI);
+}
+
+function clearGonio(){gonioPoints=[];drawGonio();document.getElementById('gonio-info').textContent='Clique em uma imagem abaixo para medir ângulo.'}
+
+async function analyzeGonio(){
+  if(gonioPoints.length<3){showToast('Marque 3 pontos primeiro');return;}
+  const key=getApiKey();if(!key){showToast('Configure a chave API');return;}
+  const ang=calcAngle(gonioPoints[0],gonioPoints[1],gonioPoints[2]);
+  const p=pacientes.find(x=>x.id===currentPatientId);
+  const prompt=`Você é um fisioterapeuta especialista. Um paciente chamado ${p?.nome||'paciente'} tem queixa de: "${p?.queixa||'não informada'}".
+Foi realizada goniometria por imagem, medindo 3 pontos (A proximal, B vértice, C distal) com ângulo calculado de ${ang.toFixed(1)}°.
+Interprete clinicamente este ângulo (articulação provável, amplitude normal de referência, se está dentro ou fora da normalidade), sugira hipótese diagnóstica e condutas fisioterapêuticas baseadas em evidências (2021-2025). Seja objetivo e clínico.`;
+  const res=document.getElementById('gonio-result');
+  res.style.display='block';
+  res.innerHTML='<div class="ai-block-header"><div class="ai-pulse"></div><span class="ai-block-title">ANÁLISE GONIOMÉTRICA</span></div><div class="ai-progress"><div class="ai-progress-bar" id="gonio-bar" style="width:40%;transition:width 2s"></div></div><div class="ai-block-body" id="gonio-text">Analisando...</div>';
+  setTimeout(()=>{const b=document.getElementById('gonio-bar');if(b)b.style.width='80%'},200);
+  try{
+    const _gp=anthropicFetchParams(key);
+    const resp=await fetch(_gp.url,{
+      method:'POST',headers:_gp.headers,
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await resp.json();
+    const txt=d.content?.[0]?.text||'Erro na análise';
+    const b=document.getElementById('gonio-bar');if(b)b.style.width='100%';
+    document.getElementById('gonio-text').textContent=txt;
+    if(p){p.goniometria=`${ang.toFixed(1)}° — ${txt}`;saveState();}
+  }catch(e){document.getElementById('gonio-text').textContent='Erro: '+e.message;}
+}
+
+// ============================================================
+// DETAIL AUDIO
+// ============================================================
+let detailAudioFile=null;
+function handleDetailAudio(event){
+  detailAudioFile=event.target.files[0];
+  if(detailAudioFile)document.getElementById('detail-audio-fname').textContent=detailAudioFile.name;
+}
+
+async function processDetailAudio(){
+  const key=getApiKey();if(!key){showToast('Configure a chave API');return;}
+  const text=document.getElementById('d-audio-text').value.trim();
+  if(!text&&!detailAudioFile){showToast('Adicione áudio ou texto');return;}
+  const p=pacientes.find(x=>x.id===currentPatientId);
+  const prompt=`Você é um fisioterapeuta clínico. Analise a seguinte descrição clínica de ${p?.nome||'paciente'} com queixa "${p?.queixa||'não informada'}":
+
+"${text||'[Áudio carregado — analise com base nos dados já registrados do paciente]'}"
+
+Retorne em formato estruturado:
+HIPÓTESE DIAGNÓSTICA: [...]
+PLANO DE TRATAMENTO: [técnicas, frequência, progressão]
+OBSERVAÇÕES CLÍNICAS: [achados relevantes, sinais de alerta]
+Base sua resposta em evidências científicas de 2021-2025.`;
+
+  const res=document.getElementById('detail-audio-result');
+  res.style.display='block';
+  document.getElementById('detail-audio-result-text').textContent='Processando...';
+  const bar=document.getElementById('detail-audio-bar');
+  bar.style.width='0';setTimeout(()=>bar.style.width='50%',100);
+  try{
+    const _ap=anthropicFetchParams(key);
+    const resp=await fetch(_ap.url,{
+      method:'POST',headers:_ap.headers,
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1200,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await resp.json();
+    const txt=d.content?.[0]?.text||'Erro';
+    bar.style.width='100%';
+    document.getElementById('detail-audio-result-text').textContent=txt;
+    // Parse and fill fields
+    const diagMatch=txt.match(/HIPÓTESE DIAGNÓSTICA:\s*(.+?)(?=\n[A-Z]|$)/s);
+    const planoMatch=txt.match(/PLANO DE TRATAMENTO:\s*(.+?)(?=\n[A-Z]|$)/s);
+    const obsMatch=txt.match(/OBSERVAÇÕES CLÍNICAS:\s*(.+?)(?=\n[A-Z]|$)/s);
+    if(diagMatch)document.getElementById('d-diag').value=diagMatch[1].trim();
+    if(planoMatch)document.getElementById('d-plano').value=planoMatch[1].trim();
+    if(obsMatch)document.getElementById('d-obs').value=obsMatch[1].trim();
+    if(p){
+      p.audioText=text;
+      if(diagMatch)p.diagnostico=diagMatch[1].trim();
+      if(planoMatch)p.plano=planoMatch[1].trim();
+      if(obsMatch)p.observations=obsMatch[1].trim();
+      saveState();
+    }
+    showToast('Campos preenchidos pela IA!');
+  }catch(e){document.getElementById('detail-audio-result-text').textContent='Erro: '+e.message;}
+}
+
+// ============================================================
+// REPORT
+// ============================================================
+async function generateReport(){
+  const key=getApiKey();if(!key){showToast('Configure a chave API');return;}
+  const p=pacientes.find(x=>x.id===currentPatientId);if(!p)return;
+  const btn=document.getElementById('btn-gen-report');
+  btn.disabled=true;btn.textContent='Gerando...';
+  const prompt=`Você é um fisioterapeuta especialista em cinesiologia e fisioterapia musculoesquelética. Elabore um RELATÓRIO CINESIOLÓGICO-FUNCIONAL completo e formal para o seguinte paciente, baseando-se exclusivamente em evidências científicas dos últimos 5 anos (2021-2025):
+
+PACIENTE: ${p.nome}
+DATA DE NASCIMENTO: ${p.nasc||'NI'}
+QUEIXA PRINCIPAL: ${p.queixa||'NI'}
+HISTÓRIA PATOLÓGICA: ${p.hpp||'NI'}
+HIPÓTESE DIAGNÓSTICA: ${p.diagnostico||'NI'}
+PLANO ATUAL: ${p.plano||'NI'}
+OBSERVAÇÕES: ${p.observations||'NI'}
+GONIOMETRIA: ${p.goniometria||'NI'}
+
+O relatório deve conter:
+1. IDENTIFICAÇÃO DO PACIENTE
+2. QUEIXA PRINCIPAL E HISTÓRICO
+3. AVALIAÇÃO CINESIOLÓGICA-FUNCIONAL (amplitude de movimento, força, equilíbrio, marcha, postura)
+4. HIPÓTESE DIAGNÓSTICA FISIOTERAPÊUTICA
+5. OBJETIVOS TERAPÊUTICOS (curto, médio e longo prazo)
+6. PLANO DE TRATAMENTO BASEADO EM EVIDÊNCIAS (com referências científicas 2021-2025)
+7. PROGNÓSTICO
+8. CONCLUSÃO
+
+Use linguagem técnica e formal. Inclua referências a estudos relevantes.`;
+
+  const area=document.getElementById('report-area');
+  area.innerHTML='<div class="ai-block"><div class="ai-block-header"><div class="ai-pulse"></div><span class="ai-block-title">GERANDO RELATÓRIO</span></div><div class="ai-block-body" id="report-stream">Elaborando relatório baseado em evidências científicas...</div></div>';
+  try{
+    const _rp=anthropicFetchParams(key);
+    const resp=await fetch(_rp.url,{
+      method:'POST',headers:_rp.headers,
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:3000,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await resp.json();
+    const txt=d.content?.[0]?.text||'Erro ao gerar';
+    p.relatorio=txt;relatoriosCount++;saveState();
+    area.innerHTML='<div class="report-block">'+txt+'</div>';
+    showToast('Relatório gerado!');
+  }catch(e){area.innerHTML='<div style="color:var(--red);font-size:13px;padding:16px">Erro: '+e.message+'</div>';}
+  btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Gerar Relatório Cinesiológico-Funcional';
+}
+
+function copyReport(){
+  const el=document.querySelector('#report-area .report-block');
+  if(!el){showToast('Nenhum relatório');return;}
+  navigator.clipboard.writeText(el.textContent).then(()=>showToast('Copiado!')).catch(()=>{
+    const r=document.createRange();r.selectNode(el);
+    window.getSelection().removeAllRanges();window.getSelection().addRange(r);
+    showToast('Selecione e copie manualmente');
+  });
+}
+
+// ============================================================
+// SAVE PATIENT EDITS
+// ============================================================
+function savePatientEdits(){
+  const p=pacientes.find(x=>x.id===currentPatientId);if(!p)return;
+  p.nome=document.getElementById('d-nome').value;
+  p.nasc=document.getElementById('d-nasc').value;
+  p.cpf=document.getElementById('d-cpf').value;
+  p.tel=document.getElementById('d-tel').value;
+  p.cep=document.getElementById('d-cep').value;
+  p.logradouro=document.getElementById('d-logradouro').value;
+  p.numero=document.getElementById('d-numero').value;
+  p.complemento=document.getElementById('d-complemento').value;
+  p.bairro=document.getElementById('d-bairro').value;
+  p.cidade=document.getElementById('d-cidade').value;
+  p.uf=document.getElementById('d-uf').value;
+  p.queixa=document.getElementById('d-queixa').value;
+  p.hpp=document.getElementById('d-hpp').value;
+  p.diagnostico=document.getElementById('d-diag').value;
+  p.plano=document.getElementById('d-plano').value;
+  p.observations=document.getElementById('d-obs').value;
+  p.valor=parseFloat(document.getElementById('d-valor').value)||160;
+  p.venc=document.getElementById('d-venc').value;
+  p.audioText=document.getElementById('d-audio-text').value;
+  saveState();renderPatients();showToast('Salvo!');
+  document.getElementById('detail-nome').textContent=p.nome;
+  document.getElementById('detail-meta').textContent=(p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):'s/d')+' · '+(p.queixa||'sem queixa')+(p.pago?' · ✓ Pago':' · ⚠ Pendente');
+}
+
+function deleteCurrentPatient(){
+  const p=pacientes.find(x=>x.id===currentPatientId);if(!p)return;
+  if(!confirm(`Excluir ${p.nome}?`))return;
+  pacientes=pacientes.filter(x=>x.id!==currentPatientId);
+  saveState();renderPatients();renderDashboard();closeModal('modal-detail');showToast('Paciente excluído');
+}
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+function renderPayments(){
+  const list=document.getElementById('payments-list');
+  const empty=document.getElementById('payments-empty');
+  if(!pagamentos.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=[...pagamentos].reverse().map(pg=>`
+    <div class="table-row pay-row">
+      <div class="td name">${pg.nome}</div>
+      <div class="td val">R$${pg.valor.toLocaleString('pt-BR')}</div>
+      <div class="td">${pg.mes}</div>
+      <div class="td">${pg.data}</div>
+      <div class="td"><span class="badge badge-success">${pg.recibo}</span></div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// REPORTS VIEW
+// ============================================================
+function renderReports(){
+  const list=document.getElementById('reports-list');
+  const empty=document.getElementById('reports-empty');
+  const withReport=pacientes.filter(p=>p.relatorio);
+  if(!withReport.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=withReport.map(p=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-weight:600;font-size:15px">${p.nome}</div>
+        <button class="btn btn-sm btn-violet" onclick="openPatientDetail(${p.id});setTimeout(()=>setDTab('relatorio',null),200)">Ver Relatório</button>
+      </div>
+      <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:8px">${p.queixa||'sem queixa'}</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;max-height:80px;overflow:hidden;position:relative">
+        ${p.relatorio.substring(0,300)}...
+        <div style="position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--bg2))"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// WIZARD: NEW PATIENT
+// ============================================================
+function openNewPatientModal(){
+  wizardStep=1;
+  wizardMedia=[];
+  document.getElementById('nw-nome').value='';
+  document.getElementById('nw-nasc').value='';
+  document.getElementById('nw-cpf').value='';
+  document.getElementById('nw-tel').value='';
+  ['nw-cep','nw-logradouro','nw-numero','nw-complemento','nw-bairro','nw-cidade','nw-uf'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('nw-queixa').value='';
+  document.getElementById('nw-hpp').value='';
+  document.getElementById('nw-valor').value='160';
+  document.getElementById('nw-venc').value='';
+  document.getElementById('nw-descricao').value='';
+  document.getElementById('nw-diagnostico').value='';
+  document.getElementById('nw-plano').value='';
+  document.getElementById('nw-obs').value='';
+  document.getElementById('ai-results').style.display='none';
+  document.getElementById('ai-step-status').textContent='Clique em "Analisar com IA" para processar todos os dados inseridos.';
+  document.getElementById('btn-run-ai').disabled=false;
+  document.getElementById('btn-run-ai').innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Analisar com IA';
+  setMediaTab('all',document.querySelector('.media-tab'));
+  document.getElementById('new-media-preview').innerHTML='';
+  updateWizardUI();
+  openModal('modal-new');
+}
+
+function setMediaTab(type,el){
+  document.querySelectorAll('.media-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const zones=['zone-image','zone-video','zone-audio'];
+  zones.forEach(z=>{
+    const el2=document.getElementById(z);
+    if(!el2)return;
+    const ztype=z.replace('zone-','');
+    el2.style.display=(type==='all'||type===ztype)?'block':'none';
+  });
+}
+
+function handleNewMediaUpload(event,type){
+  Array.from(event.target.files).forEach(file=>{
+    const fr=new FileReader();
+    fr.onload=e=>{
+      wizardMedia.push({type,name:file.name,data:e.target.result});
+      renderNewMediaPreview();
+    };
+    fr.readAsDataURL(file);
+  });
+  event.target.value='';
+}
+
+function renderNewMediaPreview(){
+  const el=document.getElementById('new-media-preview');
+  if(!wizardMedia.length){el.innerHTML='';return;}
+  el.innerHTML=`<div style="margin-top:12px"><div style="font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">${wizardMedia.length} arquivo(s) adicionado(s)</div><div class="media-grid">
+    ${wizardMedia.map((m,i)=>`
+      <div class="media-thumb">
+        ${m.type==='image'?`<img src="${m.data}">`:(m.type==='video'?`<video src="${m.data}" muted>`:`<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px">🎙️</div>`)}
+        <div class="media-thumb-badge">${m.type.toUpperCase().substring(0,3)}</div>
+        <button class="media-thumb-del" onclick="wizardMedia.splice(${i},1);renderNewMediaPreview()">×</button>
+      </div>
+    `).join('')}
+  </div></div>`;
+}
+
+function updateWizardUI(){
+  // Steps
+  [1,2,3,4].forEach(s=>{
+    const el=document.getElementById('wstep-'+s);
+    el.classList.remove('active','done');
+    if(s<wizardStep)el.classList.add('done');
+    else if(s===wizardStep)el.classList.add('active');
+  });
+  // Wizard line tints (after each step that's done)
+  document.querySelectorAll('.wizard-line').forEach((l,i)=>{
+    l.style.background=i<wizardStep-1?'var(--accent)':'var(--border)';
+  });
+  // Show/hide steps
+  [1,2,3,4].forEach(s=>{
+    document.getElementById('wizard-step-'+s).style.display=s===wizardStep?'block':'none';
+  });
+  // Buttons
+  document.getElementById('wizard-back-btn').style.display=wizardStep>1?'inline-flex':'none';
+  const nextBtn=document.getElementById('wizard-next-btn');
+  if(wizardStep===4){
+    nextBtn.textContent='✓ Salvar Paciente';
+    nextBtn.className='btn btn-accent';
+  } else {
+    nextBtn.textContent='Próximo →';
+    nextBtn.className='btn btn-accent';
+  }
+}
+
+function wizardNext(){
+  if(wizardStep===1){
+    if(!document.getElementById('nw-nome').value.trim()){showToast('Informe o nome do paciente');return;}
+    wizardStep=2;updateWizardUI();
+  } else if(wizardStep===2){
+    wizardStep=3;updateWizardUI();
+  } else if(wizardStep===3){
+    wizardStep=4;renderWizardReview();updateWizardUI();
+  } else if(wizardStep===4){
+    saveNewPatient();
+  }
+}
+
+function wizardBack(){
+  if(wizardStep>1){wizardStep--;updateWizardUI();}
+}
+
+function renderWizardReview(){
+  const rev=document.getElementById('wizard-review');
+  rev.innerHTML=`
+    <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px">
+      <span style="color:var(--text3);font-size:12px;font-family:var(--mono)">NOME</span><span>${document.getElementById('nw-nome').value||'-'}</span>
+      <span style="color:var(--text3);font-size:12px;font-family:var(--mono)">NASCIMENTO</span><span>${document.getElementById('nw-nasc').value||'-'}</span>
+      <span style="color:var(--text3);font-size:12px;font-family:var(--mono)">QUEIXA</span><span>${document.getElementById('nw-queixa').value||'-'}</span>
+      <span style="color:var(--text3);font-size:12px;font-family:var(--mono)">VALOR</span><span style="color:var(--accent);font-family:var(--mono)">R$${document.getElementById('nw-valor').value}</span>
+      <span style="color:var(--text3);font-size:12px;font-family:var(--mono)">DIAGNÓSTICO</span><span>${document.getElementById('nw-diagnostico').value||'(não analisado)'}</span>
+      <span style="color:var(--text3);font-size:12px;font-family:var(--mono)">MÍDIA</span><span>${wizardMedia.length} arquivo(s)</span>
+    </div>
+  `;
+  const revMedia=document.getElementById('wizard-review-media');
+  if(wizardMedia.length){
+    revMedia.innerHTML='<div class="media-grid">'+wizardMedia.map(m=>`<div class="media-thumb">${m.type==='image'?`<img src="${m.data}">`:(m.type==='video'?`<video src="${m.data}" muted>`:`<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px">🎙️</div>`)}<div class="media-thumb-badge">${m.type.toUpperCase().substring(0,3)}</div></div>`).join('')+'</div>';
+  } else {revMedia.innerHTML='';}
+}
+
+async function runWizardAI(){
+  const key=getApiKey();
+  if(!key){showToast('Configure a chave API na Dashboard');return;}
+  const nome=document.getElementById('nw-nome').value.trim();
+  const queixa=document.getElementById('nw-queixa').value.trim();
+  const hpp=document.getElementById('nw-hpp').value.trim();
+  const descricao=document.getElementById('nw-descricao').value.trim();
+  const mediaInfo=wizardMedia.map(m=>`[${m.type.toUpperCase()}: ${m.name}]`).join(', ');
+
+  const btn=document.getElementById('btn-run-ai');
+  btn.disabled=true;btn.textContent='Analisando...';
+  document.getElementById('ai-step-status').textContent='IA processando dados clínicos...';
+  document.getElementById('ai-results').style.display='block';
+  document.getElementById('ai-result-text').textContent='Aguarde...';
+  const bar=document.getElementById('ai-prog-bar');
+  bar.style.width='0';setTimeout(()=>bar.style.width='40%',100);
+
+  // Build content parts
+  let imageContent=[];
+  for(const m of wizardMedia){
+    if(m.type==='image'&&m.data&&m.data.startsWith('data:image')){
+      const b64=m.data.split(',')[1];
+      const mime=m.data.split(';')[0].split(':')[1];
+      imageContent.push({type:'image',source:{type:'base64',media_type:mime,data:b64}});
+    }
+  }
+
+  const textPrompt=`Você é um fisioterapeuta especialista em avaliação cinesiológica e funcional. Analise os seguintes dados de um NOVO paciente em avaliação inicial:
+
+PACIENTE: ${nome||'NI'}
+QUEIXA PRINCIPAL: ${queixa||'NI'}
+HISTÓRIA PATOLÓGICA: ${hpp||'NI'}
+DESCRIÇÃO CLÍNICA: ${descricao||'NI'}
+MÍDIAS ENVIADAS: ${mediaInfo||'Nenhuma'}${imageContent.length?' (imagens analisadas acima)':''}
+
+${imageContent.length?'Analise as imagens acima observando postura, alinhamento, amplitude de movimento, compensações, padrões de movimento patológicos e achados goniométricos.':''}
+
+Retorne EXATAMENTE neste formato:
+ANÁLISE CLÍNICA:
+[Resumo da avaliação, achados principais, postura observada, limitações funcionais]
+
+HIPÓTESE DIAGNÓSTICA:
+[Diagnóstico fisioterapêutico funcional detalhado, incluindo estruturas acometidas e mecanismo de lesão provável]
+
+PLANO DE TRATAMENTO:
+[Técnicas fisioterapêuticas indicadas, frequência semanal, progressão, objetivos por fase — baseado em evidências 2021-2025]
+
+OBSERVAÇÕES CLÍNICAS:
+[Sinais de alerta, contraindicações, orientações ao paciente, critérios de alta]`;
+
+  const messages=[{role:'user',content:[...imageContent,{type:'text',text:textPrompt}]}];
+
+  try{
+    bar.style.width='70%';
+    const _np=anthropicFetchParams(key);
+    const resp=await fetch(_np.url,{
+      method:'POST',
+      headers:_np.headers,
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:2000,messages})
+    });
+    const d=await resp.json();
+    const txt=d.content?.[0]?.text||'Erro na análise';
+    bar.style.width='100%';
+    document.getElementById('ai-result-text').textContent=txt;
+    document.getElementById('ai-step-status').textContent='✓ Análise concluída. Campos preenchidos automaticamente.';
+
+    // Extract and fill fields
+    const analysisMatch=txt.match(/ANÁLISE CLÍNICA:\s*\n([\s\S]+?)(?=\n[A-Z\s]+:|$)/);
+    const diagMatch=txt.match(/HIPÓTESE DIAGNÓSTICA:\s*\n([\s\S]+?)(?=\n[A-Z\s]+:|$)/);
+    const planoMatch=txt.match(/PLANO DE TRATAMENTO:\s*\n([\s\S]+?)(?=\n[A-Z\s]+:|$)/);
+    const obsMatch=txt.match(/OBSERVAÇÕES CLÍNICAS:\s*\n([\s\S]+?)(?=\n[A-Z\s]+:|$)/);
+
+    if(diagMatch)document.getElementById('nw-diagnostico').value=diagMatch[1].trim();
+    if(planoMatch)document.getElementById('nw-plano').value=planoMatch[1].trim();
+    if(obsMatch)document.getElementById('nw-obs').value=obsMatch[1].trim();
+    showToast('IA preencheu os campos!');
+  }catch(e){
+    document.getElementById('ai-result-text').textContent='Erro: '+e.message;
+    document.getElementById('ai-step-status').textContent='Erro na análise. Verifique a chave API.';
+  }
+  btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Reanalisar';
+}
+
+function saveNewPatient(){
+  const nome=document.getElementById('nw-nome').value.trim();
+  if(!nome){showToast('Informe o nome');return;}
+  const p={
+    id:Date.now()+Math.random(),
+    nome,
+    nasc:document.getElementById('nw-nasc').value,
+    cpf:document.getElementById('nw-cpf').value,
+    tel:document.getElementById('nw-tel').value,
+    cep:document.getElementById('nw-cep').value,
+    logradouro:document.getElementById('nw-logradouro').value,
+    numero:document.getElementById('nw-numero').value,
+    complemento:document.getElementById('nw-complemento').value,
+    bairro:document.getElementById('nw-bairro').value,
+    cidade:document.getElementById('nw-cidade').value,
+    uf:document.getElementById('nw-uf').value,
+    queixa:document.getElementById('nw-queixa').value,
+    hpp:document.getElementById('nw-hpp').value,
+    valor:parseFloat(document.getElementById('nw-valor').value)||valorPadrao(nome),
+    venc:document.getElementById('nw-venc').value,
+    pago:false,recibo:'Não',mes:'',
+    diagnostico:document.getElementById('nw-diagnostico').value,
+    plano:document.getElementById('nw-plano').value,
+    observations:document.getElementById('nw-obs').value,
+    audioText:document.getElementById('nw-descricao').value,
+    media:wizardMedia.map(m=>({type:m.type,name:m.name,data:m.data})),
+    relatorio:'',goniometria:'',
+  };
+  pacientes.unshift(p);
+  saveState();renderPatients();renderDashboard();
+  closeModal('modal-new');
+  showToast(`${nome} cadastrado com sucesso!`);
+  // Open their detail
+  setTimeout(()=>openPatientDetail(p.id),300);
+}
+
+// ============================================================
+// CEP — VIACEP
+// ============================================================
+function maskCep(el){
+  let v=el.value.replace(/\D/g,'').substring(0,8);
+  if(v.length>5)v=v.substring(0,5)+'-'+v.substring(5);
+  el.value=v;
+}
+
+async function buscarCep(prefix){
+  const cepEl=document.getElementById(prefix+'-cep');
+  if(!cepEl)return;
+  const cep=cepEl.value.replace(/\D/g,'');
+  if(cep.length!==8){return;}
+  cepEl.style.borderColor='var(--accent2)';
+  try{
+    const r=await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const d=await r.json();
+    if(d.erro){cepEl.style.borderColor='var(--red)';showToast('CEP não encontrado');return;}
+    const set=(id,val)=>{const el=document.getElementById(prefix+'-'+id);if(el&&val)el.value=val;};
+    set('logradouro',d.logradouro);
+    set('bairro',d.bairro);
+    set('cidade',d.localidade);
+    set('uf',d.uf);
+    cepEl.style.borderColor='var(--green)';
+    showToast('Endereço preenchido!');
+    // focus no número
+    const numEl=document.getElementById(prefix+'-numero');
+    if(numEl)numEl.focus();
+  }catch(e){
+    cepEl.style.borderColor='var(--red)';
+    showToast('Erro ao buscar CEP');
+  }
+}
+
+function enderecoStr(p){
+  const partes=[p.logradouro,p.numero,p.complemento,p.bairro,p.cidade,p.uf,p.cep].filter(Boolean);
+  return partes.join(', ');
+}
+
+// ============================================================
+// FICHA OCR
+// ============================================================
+let fichaImages = []; // [{base64, mime, name, dataUrl}]
+
+function openFichaModal(){
+  fichaImages=[];
+  document.getElementById('ficha-step-upload').style.display='block';
+  document.getElementById('ficha-step-review').style.display='none';
+  document.getElementById('ficha-images-grid').innerHTML='';
+  document.getElementById('ficha-images-grid').style.display='none';
+  document.getElementById('btn-add-more-ficha').style.display='none';
+  document.getElementById('btn-read-ficha').style.display='none';
+  document.getElementById('ficha-ocr-block').style.display='none';
+  document.getElementById('ficha-back-btn').style.display='none';
+  document.getElementById('ficha-confirm-btn').style.display='none';
+  document.getElementById('ficha-img-input').value='';
+  openModal('modal-ficha');
+}
+
+function handleFichaUpload(event){
+  const files=Array.from(event.target.files);
+  if(!files.length)return;
+  let loaded=0;
+  files.forEach(file=>{
+    const fr=new FileReader();
+    fr.onload=e=>{
+      const dataUrl=e.target.result;
+      fichaImages.push({
+        base64:dataUrl.split(',')[1],
+        mime:dataUrl.split(';')[0].split(':')[1],
+        name:file.name,
+        dataUrl
+      });
+      loaded++;
+      if(loaded===files.length) renderFichaGrid();
+    };
+    fr.readAsDataURL(file);
+  });
+  event.target.value=''; // allow re-selecting same file
+}
+
+function renderFichaGrid(){
+  const grid=document.getElementById('ficha-images-grid');
+  grid.innerHTML='';
+  fichaImages.forEach((img,i)=>{
+    const wrap=document.createElement('div');
+    wrap.style.cssText='position:relative;border-radius:8px;overflow:hidden;aspect-ratio:3/4;background:var(--bg3);border:1px solid var(--border)';
+    const im=document.createElement('img');
+    im.src=img.dataUrl;
+    im.style.cssText='width:100%;height:100%;object-fit:cover';
+    const del=document.createElement('button');
+    del.innerHTML='×';
+    del.title='Remover';
+    del.style.cssText='position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(255,71,87,.85);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0';
+    del.onclick=()=>{fichaImages.splice(i,1);renderFichaGrid();};
+    const lbl=document.createElement('div');
+    lbl.textContent=(i+1);
+    lbl.style.cssText='position:absolute;bottom:3px;left:4px;font-size:10px;color:#fff;background:rgba(0,0,0,.5);border-radius:4px;padding:1px 4px';
+    wrap.appendChild(im);wrap.appendChild(del);wrap.appendChild(lbl);
+    grid.appendChild(wrap);
+  });
+  const show=fichaImages.length>0;
+  grid.style.display=show?'grid':'none';
+  document.getElementById('btn-add-more-ficha').style.display=show?'inline-flex':'none';
+  document.getElementById('btn-read-ficha').style.display=show?'inline-flex':'none';
+  document.getElementById('ficha-ocr-block').style.display='none';
+}
+
+async function runFichaOCR(){
+  const key=getApiKey();
+  if(!key){showToast('Configure a chave API na Dashboard');return;}
+  if(!fichaImages.length){showToast('Selecione ao menos uma imagem');return;}
+
+  document.getElementById('btn-read-ficha').disabled=true;
+  document.getElementById('btn-read-ficha').textContent='Lendo...';
+  const block=document.getElementById('ficha-ocr-block');
+  block.style.display='block';
+  const bar=document.getElementById('ficha-ocr-bar');
+  bar.style.width='0';
+  setTimeout(()=>bar.style.width='35%',100);
+  setTimeout(()=>bar.style.width='65%',1200);
+
+  const prompt=`Você é um fisioterapeuta clínico sênior com expertise em anamnese, farmacologia clínica e elaboração de laudos fisioterapêuticos. Analise a imagem desta ficha de cadastro preenchida à mão ou digitada.
+
+SUA TAREFA TEM 4 PARTES:
+
+══ PARTE 1 — OCR e LIMPEZA ══
+Leia todos os campos visíveis. Corrija erros ortográficos, abreviaturas e caligrafia duvidosa de forma inteligente (ex: "dorr lombar" → "dor lombar", "hipert." → "hipertensão arterial"). Padronize nomes com maiúsculas corretas. Formate datas como AAAA-MM-DD.
+
+══ PARTE 2 — CORRELAÇÃO MEDICAMENTO → COMORBIDADE ══
+Para cada medicamento identificado, infira e adicione a comorbidade correspondente às já listadas. Use este mapeamento (não exaustivo — use seu conhecimento clínico para os demais):
+- Losartana, Enalapril, Captopril, Valsartana, Amlodipina, Nifedipina, Hidroclorotiazida, Atenolol, Metoprolol, Propranolol, Carvedilol → Hipertensão Arterial Sistêmica (HAS)
+- Metformina (Glifage, Glucoformin), Glibenclamida, Glipizida, Sitagliptina, Empagliflozina, Dapagliflozina, Insulina → Diabetes Mellitus (DM)
+- Sinvastatina, Atorvastatina, Rosuvastatina → Dislipidemia
+- Levotiroxina (Puran T4) → Hipotireoidismo
+- Omeprazol, Pantoprazol, Esomeprazol → Gastrite / DRGE
+- Alprazolam, Clonazepam, Diazepam → Transtorno de ansiedade / uso de benzodiazepínico
+- AAS (Aspirina), Clopidogrel → Doença cardiovascular / antiagregação plaquetária
+- Warfarina, Rivaroxabana, Apixabana → Anticoagulação / risco tromboembólico
+- Alendronato → Osteoporose
+- Carbonato de cálcio + Vitamina D → Osteopenia / Osteoporose
+- Alopurinol → Hiperuricemia / Gota
+- Salbutamol, Formoterol, Budesonida, Fluticasona → Asma / DPOC
+- Amitriptilina, Nortriptilina, Fluoxetina, Sertralina, Escitalopram → Depressão / dor crônica
+- Pregabalina, Gabapentina → Neuropatia / dor neuropática
+- Metotrexato, Hidroxicloroquina, Leflunomida → Artrite reumatoide / doença autoimune
+- Prednisona, Deflazacorte (uso crônico) → Doença inflamatória crônica / corticodependência
+- Finasterida, Tamsulosina → Hiperplasia prostática benigna (HPB)
+Se a comorbidade já estiver listada, não a duplique. Separe as comorbidades por vírgula.
+
+══ PARTE 3 — HIPÓTESE DIAGNÓSTICA FISIOTERAPÊUTICA ══
+Com base em queixa, HPP, medicamentos e comorbidades inferidas, elabore uma hipótese diagnóstica fisioterapêutica fundamentada (ex: "Síndrome dolorosa lombar inespecífica com provável componente miofascial em paciente com HAS e DM2, sem sinais de alerta para patologia estrutural grave").
+
+══ PARTE 4 — LAUDO FISIOTERAPÊUTICO INICIAL ══
+Elabore um laudo fisioterapêutico inicial formal e completo, incluindo:
+1. Identificação e queixa principal
+2. Achados relevantes da anamnese (HPP, medicamentos, comorbidades)
+3. Hipótese diagnóstica fisioterapêutica
+4. Objetivos do tratamento (curto e médio prazo)
+5. Proposta de conduta fisioterapêutica baseada em evidências (2021-2025)
+6. Prognóstico funcional
+Use linguagem técnica, formal, em português correto. Seja objetivo mas completo.
+
+══ FORMATO DE RESPOSTA ══
+Retorne EXATAMENTE este JSON (sem texto antes ou depois):
+
+{
+  "nome": "nome completo corrigido",
+  "data_nascimento": "AAAA-MM-DD ou null",
+  "cpf": "000.000.000-00 ou null",
+  "telefone": "número ou null",
+  "cep": "00000-000 ou null",
+  "logradouro": "rua/avenida ou null",
+  "numero": "número residencial ou null",
+  "complemento": "apto/bloco ou null",
+  "bairro": "bairro ou null",
+  "cidade": "cidade ou null",
+  "uf": "sigla do estado (2 letras) ou null",
+  "profissao": "profissão corrigida ou null",
+  "queixa_principal": "texto corrigido e limpo",
+  "historia_patologica": "HPP corrigida e completa",
+  "medicamentos": "lista completa de medicamentos identificados",
+  "comorbidades": "lista completa incluindo as inferidas pelos medicamentos",
+  "escala_dor": "número/10 ou null",
+  "hipotese_diagnostica": "hipótese diagnóstica fisioterapêutica elaborada (Parte 3)",
+  "plano_tratamento": "proposta de conduta da Parte 4 (objetivos + condutas + prognóstico)",
+  "valor_sessao": null,
+  "dia_vencimento": null,
+  "observacoes": "outras informações legíveis da ficha",
+  "laudo_completo": "laudo fisioterapêutico inicial completo e formal (Parte 4 integral)",
+  "confianca": "alta|media|baixa"
+}`;
+
+  try{
+    const _fp=anthropicFetchParams(key);
+    const resp=await fetch(_fp.url,{
+      method:'POST',
+      headers:_fp.headers,
+      body:JSON.stringify({
+        model:'claude-opus-4-5',
+        max_tokens:4000,
+        messages:[{role:'user',content:[
+          ...fichaImages.map((img,i)=>({type:'image',source:{type:'base64',media_type:img.mime,data:img.base64}})),
+          {type:'text',text:(fichaImages.length>1?`Você recebeu ${fichaImages.length} imagens. As primeiras são páginas da ficha de cadastro; as demais podem ser fotos de exames ou documentos complementares. Analise todas em conjunto.\n\n`:'')+prompt}
+        ]}]
+      })
+    });
+    const d=await resp.json();
+    const raw=d.content?.[0]?.text||'';
+    bar.style.width='100%';
+
+    // Parse JSON response
+    let data={};
+    try{
+      const jsonMatch=raw.match(/\{[\s\S]+\}/);
+      if(jsonMatch)data=JSON.parse(jsonMatch[0]);
+    }catch(e){
+      document.getElementById('ficha-ocr-text').textContent='Erro ao interpretar resposta. Tente com uma foto mais nítida.';
+      document.getElementById('btn-read-ficha').disabled=false;
+      document.getElementById('btn-read-ficha').textContent='Tentar Novamente';
+      return;
+    }
+
+    const conf=data.confianca||'media';
+    document.getElementById('ficha-ocr-text').textContent=
+      `Leitura concluída (confiança: ${conf}). Campos extraídos — revise antes de confirmar.`;
+
+    // Fill review form
+    document.getElementById('fr-nome').value=data.nome||'';
+    if(data.data_nascimento&&data.data_nascimento!=='null')document.getElementById('fr-nasc').value=data.data_nascimento;
+    document.getElementById('fr-cpf').value=data.cpf||'';
+    document.getElementById('fr-tel').value=data.telefone||'';
+    // endereço lido na ficha
+    if(data.cep){document.getElementById('fr-cep').value=data.cep;}
+    if(data.logradouro){document.getElementById('fr-logradouro').value=data.logradouro;}
+    if(data.numero){document.getElementById('fr-numero').value=data.numero;}
+    if(data.complemento){document.getElementById('fr-complemento').value=data.complemento;}
+    if(data.bairro){document.getElementById('fr-bairro').value=data.bairro;}
+    if(data.cidade){document.getElementById('fr-cidade').value=data.cidade;}
+    if(data.uf){document.getElementById('fr-uf').value=data.uf;}
+    // se só tem CEP, buscar automaticamente
+    if(data.cep&&!data.logradouro){setTimeout(()=>buscarCep('fr'),400);}
+    document.getElementById('fr-profissao').value=data.profissao||'';
+    let queixa=data.queixa_principal||'';
+    if(data.escala_dor)queixa+=(queixa?' · ':'')+'Dor: '+data.escala_dor;
+    document.getElementById('fr-queixa').value=queixa;
+    let hpp=data.historia_patologica||'';
+    if(data.medicamentos)hpp+=(hpp?'\n\nMedicamentos: ':'Medicamentos: ')+data.medicamentos;
+    if(data.comorbidades)hpp+=(hpp?'\n\nComorbidades: ':'Comorbidades: ')+data.comorbidades;
+    document.getElementById('fr-hpp').value=hpp;
+    document.getElementById('fr-diag').value=data.hipotese_diagnostica||'';
+    document.getElementById('fr-valor').value=data.valor_sessao||valorPadrao(data.nome||'');
+    document.getElementById('fr-venc').value=data.dia_vencimento||'';
+    document.getElementById('fr-dor').value=data.escala_dor||'';
+    const obs=(data.observacoes||'');
+    if(obs){
+      document.getElementById('fr-obs').value=obs;
+      document.getElementById('fr-obs-wrap').style.display='block';
+    }
+    // plano de tratamento
+    document.getElementById('fr-plano').value=data.plano_tratamento||'';
+    // laudo completo
+    window._fichaLaudo=data.laudo_completo||'';
+    const laudoWrap=document.getElementById('fr-laudo-wrap');
+    if(window._fichaLaudo&&laudoWrap){
+      document.getElementById('fr-laudo-text').textContent=window._fichaLaudo;
+      laudoWrap.style.display='block';
+    }
+
+    // Show review
+    document.getElementById('ficha-step-upload').style.display='none';
+    document.getElementById('ficha-step-review').style.display='block';
+    document.getElementById('ficha-back-btn').style.display='inline-flex';
+    document.getElementById('ficha-confirm-btn').style.display='inline-flex';
+
+  }catch(e){
+    document.getElementById('ficha-ocr-text').textContent='Erro: '+e.message;
+    document.getElementById('btn-read-ficha').disabled=false;
+    document.getElementById('btn-read-ficha').textContent='Tentar Novamente';
+  }
+}
+
+function fichaBackToUpload(){
+  document.getElementById('ficha-step-upload').style.display='block';
+  document.getElementById('ficha-step-review').style.display='none';
+  document.getElementById('ficha-back-btn').style.display='none';
+  document.getElementById('ficha-confirm-btn').style.display='none';
+  document.getElementById('ficha-ocr-block').style.display='none';
+  const btn=document.getElementById('btn-read-ficha');
+  btn.disabled=false;
+  btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Ler Ficha com IA';
+  // keep existing images in grid
+  renderFichaGrid();
+}
+
+function confirmFichaPatient(){
+  const nome=document.getElementById('fr-nome').value.trim();
+  if(!nome){showToast('O nome é obrigatório');return;}
+  const p={
+    id:Date.now()+Math.random(),
+    nome,
+    nasc:document.getElementById('fr-nasc').value||'',
+    cpf:document.getElementById('fr-cpf').value||'',
+    tel:document.getElementById('fr-tel').value||'',
+    cep:document.getElementById('fr-cep').value||'',
+    logradouro:document.getElementById('fr-logradouro').value||'',
+    numero:document.getElementById('fr-numero').value||'',
+    complemento:document.getElementById('fr-complemento').value||'',
+    bairro:document.getElementById('fr-bairro').value||'',
+    cidade:document.getElementById('fr-cidade').value||'',
+    uf:document.getElementById('fr-uf').value||'',
+    queixa:document.getElementById('fr-queixa').value||'',
+    hpp:document.getElementById('fr-hpp').value||'',
+    valor:parseFloat(document.getElementById('fr-valor').value)||valorPadrao(nome),
+    venc:document.getElementById('fr-venc').value||'',
+    pago:false,recibo:'Não',mes:'',
+    diagnostico:document.getElementById('fr-diag').value||'',
+    plano:document.getElementById('fr-plano').value||'',
+    observations:document.getElementById('fr-obs').value||'',
+    audioText:'',
+    media:[],relatorio:window._fichaLaudo||'',goniometria:'',
+    origem:'ficha_ocr',
+  };
+  pacientes.unshift(p);
+  saveState();renderPatients();renderDashboard();
+  closeModal('modal-ficha');
+  showToast(`${nome} cadastrado via leitura de ficha!`);
+  setTimeout(()=>openPatientDetail(p.id),300);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderDashboard();
+</script>
+
+</body></html>
