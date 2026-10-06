@@ -474,6 +474,10 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         Tema
       </button>
+      <button class="topbar-btn" onclick="openExportModal()" title="Baixar backup dos dados" style="border-color:rgba(0,212,160,.35);color:var(--green)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Backup
+      </button>
       <button class="topbar-btn" onclick="openFichaModal()" style="border-color:rgba(124,58,237,.4);color:var(--accent2)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         Ler Ficha
@@ -1176,6 +1180,53 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
       <div style="flex:1"></div>
       <button class="btn btn-sm" onclick="closeModal('modal-ficha')">Cancelar</button>
       <button class="btn btn-accent btn-sm" id="ficha-confirm-btn" style="display:none" onclick="confirmFichaPatient()">✓ Confirmar Cadastro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORTAR -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title">📦 Exportar / Backup</span>
+      <button class="modal-close" onclick="closeModal('modal-export')">×</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;padding:20px">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:4px">Escolha o formato para baixar seus dados:</p>
+
+      <!-- JSON -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer" onclick="exportJSON()">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,212,160,.12);border:1px solid rgba(0,212,160,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🗂️</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px;margin-bottom:2px">Backup Completo (JSON)</div>
+          <div style="font-size:12px;color:var(--text2)">Todos os pacientes, pagamentos e relatórios. Pode ser reimportado.</div>
+        </div>
+        <button class="btn btn-sm" style="border-color:rgba(0,212,160,.4);color:var(--green);flex-shrink:0" onclick="event.stopPropagation();exportJSON()">Baixar</button>
+      </div>
+
+      <!-- CSV -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer" onclick="exportCSV()">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,140,255,.1);border:1px solid rgba(0,140,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📊</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px;margin-bottom:2px">Planilha de Pacientes (CSV)</div>
+          <div style="font-size:12px;color:var(--text2)">Abre no Excel, Google Sheets ou Numbers.</div>
+        </div>
+        <button class="btn btn-sm" style="border-color:rgba(0,140,255,.3);color:#4da6ff;flex-shrink:0" onclick="event.stopPropagation();exportCSV()">Baixar</button>
+      </div>
+
+      <!-- PDF -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer" onclick="exportPDF()">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">📄</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px;margin-bottom:2px">Fichas em PDF</div>
+          <div style="font-size:12px;color:var(--text2)">Lista completa de pacientes formatada para impressão/PDF.</div>
+        </div>
+        <button class="btn btn-sm" style="border-color:rgba(255,71,87,.3);color:var(--red);flex-shrink:0" onclick="event.stopPropagation();exportPDF()">Gerar</button>
+      </div>
+
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">
+        💡 Faça backup regularmente para garantir a segurança dos seus dados
+      </div>
     </div>
   </div>
 </div>
@@ -2470,6 +2521,108 @@ function confirmFichaPatient(){
   closeModal('modal-ficha');
   showToast(`${nome} cadastrado via leitura de ficha!`);
   setTimeout(()=>openPatientDetail(p.id),300);
+}
+
+// ============================================================
+// EXPORTAR / BACKUP
+// ============================================================
+function openExportModal(){ openModal('modal-export'); }
+
+function triggerDownload(content, filename, mime){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+function exportJSON(){
+  const data = {
+    exportedAt: new Date().toISOString(),
+    version: 'biomovelab_v1',
+    pacientes,
+    pagamentos,
+    relatoriosCount
+  };
+  const filename = `biomovelab-backup-${new Date().toISOString().slice(0,10)}.json`;
+  triggerDownload(JSON.stringify(data, null, 2), filename, 'application/json');
+  showToast('✓ Backup JSON baixado!');
+}
+
+function exportCSV(){
+  const cols = ['Nome','Nascimento','CPF','Telefone','Email','CEP','Endereço','Bairro','Cidade','UF','Queixa','Diagnóstico','Plano','Valor (R$)','Vencimento','Pago','Observações','Relatório IA'];
+  const rows = pacientes.map(p=>[
+    p.nome||'', p.nascimento||'', p.cpf||'', p.telefone||'', p.email||'',
+    p.cep||'', p.endereco||'', p.bairro||'', p.cidade||'', p.uf||'',
+    p.queixa||'', p.diagnostico||'', p.plano||'',
+    p.valor||'', p.venc||'', p.pago?'Sim':'Não',
+    (p.observations||'').replace(/\n/g,' '),
+    (p.relatorio||'').replace(/\n/g,' ')
+  ].map(v=>`"${String(v).replace(/"/g,'""')}"`));
+
+  const csv = '﻿' + [cols.map(c=>`"${c}"`).join(','), ...rows.map(r=>r.join(','))].join('\r\n');
+  const filename = `biomovelab-pacientes-${new Date().toISOString().slice(0,10)}.csv`;
+  triggerDownload(csv, filename, 'text/csv;charset=utf-8');
+  showToast('✓ Planilha CSV baixada!');
+}
+
+function exportPDF(){
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const linhas = pacientes.map((p,i)=>`
+    <tr style="page-break-inside:avoid">
+      <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top">
+        <strong>${i+1}. ${p.nome||'—'}</strong><br>
+        <span style="font-size:11px;color:#666">Nasc: ${p.nascimento||'—'} &nbsp;|&nbsp; Tel: ${p.telefone||'—'}</span>
+      </td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top;font-size:12px">
+        ${p.queixa||'—'}
+      </td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top;font-size:12px">
+        ${p.diagnostico||'—'}
+      </td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;text-align:right;vertical-align:top;font-size:12px">
+        R$ ${(p.valor||0).toFixed(2)}<br>
+        <span style="font-size:10px;color:${p.pago?'#00a066':'#cc3300'}">${p.pago?'✓ Pago':'✗ Pendente'}</span>
+      </td>
+    </tr>
+  `).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>BioMoveLab – Fichas de Pacientes</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:32px;color:#111}
+  h1{font-size:20px;margin-bottom:4px}
+  .sub{font-size:12px;color:#666;margin-bottom:24px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#f0f4f8;padding:8px 10px;text-align:left;font-size:12px;border-bottom:2px solid #c0c8d8}
+  tr:nth-child(even) td{background:#fafbfc}
+  @media print{@page{size:A4;margin:20mm}}
+</style></head><body>
+<h1>🏥 BioMoveLab — Fichas de Pacientes</h1>
+<div class="sub">Exportado em ${hoje} &nbsp;·&nbsp; Total: ${pacientes.length} paciente(s)</div>
+<table>
+<thead><tr>
+  <th style="width:35%">Paciente</th>
+  <th style="width:25%">Queixa Principal</th>
+  <th style="width:25%">Diagnóstico</th>
+  <th style="width:15%">Valor / Status</th>
+</tr></thead>
+<tbody>${linhas}</tbody>
+</table>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if(win){
+    win.document.write(html);
+    win.document.close();
+    setTimeout(()=>win.print(), 600);
+    showToast('✓ PDF aberto para impressão/salvar');
+  } else {
+    // Fallback: download como HTML
+    triggerDownload(html, `biomovelab-fichas-${new Date().toISOString().slice(0,10)}.html`, 'text/html');
+    showToast('✓ Arquivo HTML baixado (abra e imprima como PDF)');
+  }
 }
 
 // ============================================================
