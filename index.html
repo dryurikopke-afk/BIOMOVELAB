@@ -2,6 +2,9 @@
 <title>BioMoveLab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap">
+<!-- Firebase SDK (compat v10) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --bg: #070B12;
@@ -1208,25 +1211,120 @@ let wizardStep = 1;
 let wizardMedia = []; // {type,name,data,base64}
 
 // ============================================================
-// PERSISTENCE
+// FIREBASE + PERSISTENCE
 // ============================================================
-try{
-  const saved=localStorage.getItem('biomovelab_v1');
-  if(saved){
-    const d=JSON.parse(saved);
-    pacientes=d.pacientes||[];
-    pagamentos=d.pagamentos||[];
-    relatoriosCount=d.relatoriosCount||0;
-  }
-}catch(e){}
+const firebaseConfig = {
+  apiKey: "AIzaSyCMCdHILoKQygZSn1ac9yHljktKRDtzdt8",
+  authDomain: "biomovelab-4f02d.firebaseapp.com",
+  projectId: "biomovelab-4f02d",
+  storageBucket: "biomovelab-4f02d.firebasestorage.app",
+  messagingSenderId: "1022182903197",
+  appId: "1:1022182903197:web:11ca96ff569322aa1bf374"
+};
 
-function saveState(){
+let db = null;
+try {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+} catch(e) { console.warn('Firebase init error:', e); }
+
+// Indicador de sincronização no topbar
+function showSyncStatus(msg, color){
+  let el = document.getElementById('sync-status');
+  if(!el){
+    el = document.createElement('span');
+    el.id = 'sync-status';
+    el.style.cssText = 'font-size:11px;font-family:var(--mono);padding:3px 8px;border-radius:6px;margin-left:8px;transition:opacity .5s';
+    const tb = document.getElementById('topbar-title');
+    if(tb) tb.parentNode.insertBefore(el, tb.nextSibling);
+  }
+  el.textContent = msg;
+  el.style.background = color==='ok'?'rgba(0,212,160,.15)':color==='err'?'rgba(255,71,87,.15)':'rgba(255,170,0,.15)';
+  el.style.color = color==='ok'?'var(--green)':color==='err'?'var(--red)':'var(--warn)';
+  el.style.opacity = '1';
+  if(color==='ok') setTimeout(()=>{el.style.opacity='0';},3000);
+}
+
+// Salva no Firestore (e localStorage como cache)
+async function saveState(){
+  // Cache local sempre (sem base64 grande)
   try{
     localStorage.setItem('biomovelab_v1',JSON.stringify({
       pacientes:pacientes.map(p=>({...p,media:p.media.map(m=>({...m,data:m.data?m.data.substring(0,200)+'...':''}))})),
       pagamentos,relatoriosCount
     }));
   }catch(e){}
+
+  if(!db){ return; }
+  try{
+    showSyncStatus('⏳ sincronizando…','warn');
+    const batch = db.batch();
+    const ref = db.collection('dados').doc('principal');
+    // Pacientes sem dados binários grandes (media.data pode ser base64 grande)
+    const pacientesStrip = pacientes.map(p=>({
+      ...p,
+      media: p.media.map(m=>({...m, data: m.data && m.data.length>500 ? m.data.substring(0,500)+'[truncado]' : m.data}))
+    }));
+    batch.set(ref, {pacientes: pacientesStrip, pagamentos, relatoriosCount, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+    await batch.commit();
+    showSyncStatus('✓ sincronizado','ok');
+  }catch(e){
+    console.warn('Firestore save error:', e);
+    showSyncStatus('! erro ao sincronizar','err');
+  }
+}
+
+// Carrega do Firestore; faz migração de localStorage se Firestore vazio
+async function loadState(){
+  if(!db){
+    // Fallback para localStorage
+    try{
+      const saved=localStorage.getItem('biomovelab_v1');
+      if(saved){
+        const d=JSON.parse(saved);
+        pacientes=d.pacientes||[];
+        pagamentos=d.pagamentos||[];
+        relatoriosCount=d.relatoriosCount||0;
+      }
+    }catch(e){}
+    renderDashboard(); renderPatients();
+    return;
+  }
+  try{
+    showSyncStatus('⏳ carregando…','warn');
+    const doc = await db.collection('dados').doc('principal').get();
+    if(doc.exists){
+      const d = doc.data();
+      pacientes = d.pacientes||[];
+      pagamentos = d.pagamentos||[];
+      relatoriosCount = d.relatoriosCount||0;
+      showSyncStatus('✓ dados carregados','ok');
+    } else {
+      // Firestore vazio — migrar do localStorage
+      try{
+        const saved=localStorage.getItem('biomovelab_v1');
+        if(saved){
+          const d=JSON.parse(saved);
+          pacientes=d.pacientes||[];
+          pagamentos=d.pagamentos||[];
+          relatoriosCount=d.relatoriosCount||0;
+          if(pacientes.length>0 || pagamentos.length>0){
+            showSyncStatus('⏳ migrando dados locais…','warn');
+            await saveState();
+            showSyncStatus('✓ migração concluída','ok');
+          }
+        }
+      }catch(e){}
+    }
+  }catch(e){
+    console.warn('Firestore load error:', e);
+    showSyncStatus('! usando dados locais','err');
+    try{
+      const saved=localStorage.getItem('biomovelab_v1');
+      if(saved){const d=JSON.parse(saved);pacientes=d.pacientes||[];pagamentos=d.pagamentos||[];relatoriosCount=d.relatoriosCount||0;}
+    }catch(e2){}
+  }
+  renderDashboard(); renderPatients();
 }
 
 function getApiKey(){
@@ -1264,6 +1362,9 @@ try{
   const w=localStorage.getItem('bml_worker_url')||DEFAULT_WORKER_URL;
   document.getElementById('worker-url-input').value=w;
 }catch(e){document.getElementById('worker-url-input').value=DEFAULT_WORKER_URL;}
+
+// Carrega dados do Firestore (ou localStorage como fallback)
+loadState();
 
 // ============================================================
 // NAVIGATION
@@ -2372,9 +2473,8 @@ function confirmFichaPatient(){
 }
 
 // ============================================================
-// INIT
+// INIT — loadState() já cuida de renderDashboard e renderPatients
 // ============================================================
-renderDashboard();
 </script>
 
 </body></html>
