@@ -184,11 +184,11 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column}
 
 /* ── PATIENT TABLE ── */
 .table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.table-head{display:grid;grid-template-columns:1fr 100px 120px 80px 60px;gap:0;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.table-head{display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 0.5fr;gap:0;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3)}
 .th{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
 .table-row{
-  display:grid;grid-template-columns:1fr 100px 120px 80px 60px;gap:0;
-  padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;
+  display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 0.5fr;gap:0;
+  padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;
   transition:background .12s;align-items:center;
 }
 .table-row:last-child{border-bottom:none}
@@ -447,6 +447,10 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         <span class="sb-label">Pagamentos</span>
       </div>
+      <div class="sb-item" data-view="schedule">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="sb-label">Grade</span>
+      </div>
       <div class="sb-item" data-view="reports">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <span class="sb-label">Relatórios IA</span>
@@ -563,11 +567,12 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
           </button>
         </div>
         <div class="table-wrap">
-          <div class="table-head">
+          <div class="table-head" style="grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 0.5fr">
             <div class="th">Paciente</div>
             <div class="th">Nascimento</div>
             <div class="th">Queixa</div>
             <div class="th">Valor</div>
+            <div class="th">Horário / Dias</div>
             <div class="th">Status</div>
           </div>
           <div id="patient-list"></div>
@@ -576,6 +581,18 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
           <span id="pag-info" style="font-size:12px;font-family:var(--mono)">—</span>
           <div class="pag-btns" id="pag-btns"></div>
         </div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="view" id="view-schedule">
+        <div class="sec-header">
+          <span class="sec-title">Grade de Horários</span>
+          <span class="badge badge-ai">Semana</span>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">
+          Clique em um paciente para abrir a ficha. Preencha horários na aba <strong style="color:var(--accent)">Pacientes</strong>.
+        </div>
+        <div id="schedule-grid"></div>
       </div>
 
       <!-- PAYMENTS -->
@@ -1431,13 +1448,14 @@ document.querySelectorAll('.sb-item').forEach(n=>{
     n.classList.add('active');
     const view=n.dataset.view;
     document.getElementById('view-'+view).classList.add('active');
-    const titles={dashboard:'Dashboard',patients:'Pacientes',payments:'Pagamentos',reports:'Relatórios IA'};
-    document.getElementById('topbar-title').textContent=titles[view];
+    const titles={dashboard:'Dashboard',patients:'Pacientes',payments:'Pagamentos',schedule:'Grade de Horários',reports:'Relatórios IA'};
+    document.getElementById('topbar-title').textContent=titles[view]||view;
     document.getElementById('search-wrap').style.display=view==='patients'?'flex':'none';
     if(view==='patients')renderPatients();
     if(view==='payments')renderPayments();
     if(view==='reports')renderReports();
     if(view==='dashboard')renderDashboard();
+    if(view==='schedule')renderSchedule();
   };
 });
 
@@ -1447,10 +1465,14 @@ function navigate(view){
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
 }
+// Iniciar sempre em modo escuro
+document.documentElement.dataset.theme='dark';
+
 function toggleTheme(){
   const r=document.documentElement;
-  if(!r.dataset.theme||r.dataset.theme==='dark')r.dataset.theme='light';
+  if(r.dataset.theme==='dark')r.dataset.theme='light';
   else r.dataset.theme='dark';
+  try{localStorage.setItem('bml_theme',r.dataset.theme);}catch(e){}
 }
 
 // ============================================================
@@ -1548,18 +1570,39 @@ function renderPatients(){
   const slice=fp.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
   document.getElementById('patient-count-badge').textContent=total+' paciente'+(total!==1?'s':'');
 
+  const DIAS = ['D','S','T','Q','Q','S','S'];
+  const DIAS_FULL = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const list=document.getElementById('patient-list');
-  list.innerHTML=slice.map(p=>`
+  list.innerHTML=slice.map(p=>{
+    const dias = p.diasSemana||[];
+    const diasBtns = [1,2,3,4,5,6,0].map(d=>`
+      <button onclick="event.stopPropagation();toggleDia(${p.id},${d})"
+        style="width:22px;height:22px;border-radius:6px;border:1px solid ${dias.includes(d)?'var(--accent)':'var(--border)'};
+        background:${dias.includes(d)?'var(--accent-dim)':'transparent'};
+        color:${dias.includes(d)?'var(--accent)':'var(--text3)'};
+        font-size:10px;font-weight:600;cursor:pointer;padding:0;font-family:var(--mono);
+        transition:all .12s">${DIAS[d]}</button>
+    `).join('');
+    return `
     <div class="table-row" onclick="openPatientDetail(${p.id})">
-      <div class="td name">${p.nome}</div>
+      <div class="td name">${p.nome}${p.origem==='ficha_ocr'?'<span style="margin-left:6px;font-size:9px;color:var(--accent2);font-family:var(--mono);opacity:.7">OCR</span>':''}</div>
       <div class="td">${p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):'-'}</div>
       <div class="td">${p.queixa||'-'}</div>
       <div class="td val">R$${(p.valor||160).toLocaleString('pt-BR')}</div>
+      <div class="td" onclick="event.stopPropagation()">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <input type="time" value="${p.horario||''}"
+            onchange="saveHorario(${p.id},this.value)"
+            onclick="event.stopPropagation()"
+            style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:var(--mono);padding:2px 5px;width:70px;cursor:pointer">
+          <div style="display:flex;gap:2px">${diasBtns}</div>
+        </div>
+      </div>
       <div class="td">
         <span class="paid-dot" style="background:${p.pago?'var(--green)':'var(--warn)'}"></span>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   document.getElementById('pag-info').textContent=`${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,total)} de ${total}`;
   const btns=document.getElementById('pag-btns');
@@ -2542,6 +2585,112 @@ function confirmFichaPatient(){
   closeModal('modal-ficha');
   showToast(`${nome} cadastrado via leitura de ficha!`);
   setTimeout(()=>openPatientDetail(p.id),300);
+}
+
+// ============================================================
+// HORÁRIO / DIAS DA SEMANA
+// ============================================================
+function saveHorario(id, val){
+  const p = pacientes.find(x=>x.id===id);
+  if(!p) return;
+  p.horario = val;
+  saveState();
+  // atualiza grade se estiver aberta
+  if(document.getElementById('view-schedule').classList.contains('active')) renderSchedule();
+}
+
+function toggleDia(id, dia){
+  const p = pacientes.find(x=>x.id===id);
+  if(!p) return;
+  if(!p.diasSemana) p.diasSemana = [];
+  const idx = p.diasSemana.indexOf(dia);
+  if(idx>=0) p.diasSemana.splice(idx,1);
+  else p.diasSemana.push(dia);
+  saveState();
+  renderPatients();
+  if(document.getElementById('view-schedule').classList.contains('active')) renderSchedule();
+}
+
+// ============================================================
+// GRADE DE HORÁRIOS
+// ============================================================
+function renderSchedule(){
+  const el = document.getElementById('schedule-grid');
+  if(!el) return;
+
+  const DIAS_LABEL = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  // Coletar todos os horários únicos
+  const horarios = [...new Set(
+    pacientes.filter(p=>p.horario).map(p=>p.horario)
+  )].sort();
+
+  if(horarios.length===0){
+    el.innerHTML = `<div style="text-align:center;padding:48px 24px;color:var(--text3)">
+      <div style="font-size:32px;margin-bottom:12px">📅</div>
+      <div style="font-size:14px">Nenhum horário cadastrado ainda.</div>
+      <div style="font-size:12px;margin-top:6px">Preencha os horários na aba Pacientes.</div>
+    </div>`;
+    return;
+  }
+
+  // Quais dias têm pacientes?
+  const diasAtivos = [1,2,3,4,5,6,0].filter(d=>
+    pacientes.some(p=>(p.diasSemana||[]).includes(d))
+  );
+  if(diasAtivos.length===0) diasAtivos.push(1,2,3,4,5);
+
+  const cols = diasAtivos.length + 1;
+
+  let html = `<div style="overflow-x:auto">
+  <div style="display:grid;grid-template-columns:80px ${diasAtivos.map(()=>'1fr').join(' ')};min-width:480px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+    <!-- Header -->
+    <div style="background:var(--bg3);padding:10px 12px;font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)">Horário</div>
+    ${diasAtivos.map(d=>`
+      <div style="background:var(--bg3);padding:10px 12px;font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border);text-align:center">${DIAS_LABEL[d]}</div>
+    `).join('')}`;
+
+  horarios.forEach((h,hi)=>{
+    const rowBg = hi%2===0 ? 'var(--bg2)' : 'var(--bg3)';
+    html += `<div style="background:${rowBg};padding:10px 12px;font-family:var(--mono);font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);display:flex;align-items:center">${h}</div>`;
+    diasAtivos.forEach(d=>{
+      const pacs = pacientes.filter(p=>p.horario===h && (p.diasSemana||[]).includes(d));
+      const ficha = p=>p.relatorio||p.diagnostico||p.plano ? '✓' : '';
+      html += `<div style="background:${rowBg};padding:8px 10px;border-bottom:1px solid var(--border);border-left:1px solid var(--border)">
+        ${pacs.length===0
+          ? '<span style="color:var(--text3);font-size:11px">—</span>'
+          : pacs.map(p=>`
+            <div onclick="navigate('patients');setTimeout(()=>openPatientDetail(${p.id}),300)"
+              style="cursor:pointer;margin-bottom:4px;padding:4px 8px;border-radius:8px;
+              background:${p.relatorio||p.diagnostico?'rgba(0,229,204,.08)':'rgba(255,170,0,.07)'};
+              border:1px solid ${p.relatorio||p.diagnostico?'rgba(0,229,204,.2)':'rgba(255,170,0,.2)'};
+              display:flex;align-items:center;gap:5px">
+              <div style="width:6px;height:6px;border-radius:50%;background:${p.pago?'var(--green)':'var(--warn)'};flex-shrink:0"></div>
+              <span style="font-size:11px;color:var(--text);font-weight:500;line-height:1.3">${p.nome.split(' ').slice(0,2).join(' ')}</span>
+              ${p.relatorio||p.diagnostico?'<span style="font-size:9px;color:var(--accent);margin-left:auto">✓ ficha</span>':'<span style="font-size:9px;color:var(--warn);margin-left:auto">sem ficha</span>'}
+            </div>`).join('')
+        }
+      </div>`;
+    });
+  });
+
+  html += `</div></div>`;
+
+  // Resumo
+  const comHorario = pacientes.filter(p=>p.horario&&(p.diasSemana||[]).length>0).length;
+  const semHorario = pacientes.filter(p=>!p.horario||(p.diasSemana||[]).length===0).length;
+  html += `<div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text2)">
+      <span style="color:var(--accent);font-weight:600">${comHorario}</span> pacientes na grade
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text2)">
+      <span style="color:var(--warn);font-weight:600">${semHorario}</span> sem horário definido
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text2)">
+      <span style="color:var(--green);font-weight:600">${pacientes.filter(p=>p.relatorio||p.diagnostico).length}</span> com ficha preenchida
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
 }
 
 // ============================================================
