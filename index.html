@@ -184,10 +184,10 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column}
 
 /* ── PATIENT TABLE ── */
 .table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.table-head{display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 0.5fr;gap:0;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.table-head{display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 1fr;gap:0;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3)}
 .th{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
 .table-row{
-  display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 0.5fr;gap:0;
+  display:grid;grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 1fr;gap:0;
   padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;
   transition:background .12s;align-items:center;
 }
@@ -558,16 +558,24 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
 
       <!-- PATIENTS -->
       <div class="view" id="view-patients">
-        <div class="sec-header">
+        <div class="sec-header" style="flex-wrap:wrap;gap:8px">
           <span class="sec-title">Pacientes</span>
           <span class="badge badge-ai" id="patient-count-badge">0 pacientes</span>
-          <button id="sort-btn" onclick="toggleSort()" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--sans);transition:all .15s" title="Ordenar">
+          <div style="display:flex;gap:4px;margin-left:auto">
+            <button class="status-filter-btn" data-mode="ativos" onclick="toggleStatusFilter('ativos')"
+              style="padding:4px 10px;border-radius:7px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);cursor:pointer;font-size:11px;font-family:var(--sans);transition:all .12s">Ativos</button>
+            <button class="status-filter-btn" data-mode="todos" onclick="toggleStatusFilter('todos')"
+              style="padding:4px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:11px;font-family:var(--sans);transition:all .12s">Todos</button>
+            <button class="status-filter-btn" data-mode="inativos" onclick="toggleStatusFilter('inativos')"
+              style="padding:4px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:11px;font-family:var(--sans);transition:all .12s">Inativos</button>
+          </div>
+          <button id="sort-btn" onclick="toggleSort()" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--sans);transition:all .15s" title="Ordenar">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 6"/><polyline points="3 12 4 12"/><polyline points="3 18 4 18"/></svg>
             <span id="sort-label">Recentes</span>
           </button>
         </div>
         <div class="table-wrap">
-          <div class="table-head" style="grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 0.5fr">
+          <div class="table-head" style="grid-template-columns:2fr 1fr 2fr 0.8fr 1.4fr 1fr">
             <div class="th">Paciente</div>
             <div class="th">Nascimento</div>
             <div class="th">Queixa</div>
@@ -1553,10 +1561,33 @@ function toggleSort(){
 
 function onSearch(){searchTerm=document.getElementById('search-input').value.toLowerCase();currentPage=1;renderPatients();}
 
+let statusFilter = 'ativos'; // 'ativos'|'todos'|'inativos'
+
+function toggleStatusFilter(mode){
+  statusFilter = mode;
+  document.querySelectorAll('.status-filter-btn').forEach(b=>{
+    const active = b.dataset.mode===mode;
+    b.style.background = active ? 'var(--accent-dim)' : 'transparent';
+    b.style.color = active ? 'var(--accent)' : 'var(--text3)';
+    b.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+  });
+  currentPage=1; renderPatients();
+}
+
+function toggleAtivoStatus(id){
+  const p = pacientes.find(x=>x.id===id);
+  if(!p) return;
+  p.ativo = p.ativo===false ? true : false;
+  saveState(); renderPatients();
+}
+
 function filteredPatients(){
-  let list = searchTerm
-    ? pacientes.filter(p=>p.nome.toLowerCase().includes(searchTerm)||(p.queixa||'').toLowerCase().includes(searchTerm))
-    : [...pacientes];
+  let list = pacientes.filter(p=>{
+    if(statusFilter==='ativos') return p.ativo!==false;
+    if(statusFilter==='inativos') return p.ativo===false;
+    return true;
+  });
+  if(searchTerm) list=list.filter(p=>p.nome.toLowerCase().includes(searchTerm)||(p.queixa||'').toLowerCase().includes(searchTerm));
   if(sortMode==='az') list.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   else if(sortMode==='za') list.sort((a,b)=>b.nome.localeCompare(a.nome,'pt-BR'));
   return list;
@@ -1583,9 +1614,12 @@ function renderPatients(){
         font-size:10px;font-weight:600;cursor:pointer;padding:0;font-family:var(--mono);
         transition:all .12s">${DIAS[d]}</button>
     `).join('');
+    const inativo = p.ativo===false;
     return `
-    <div class="table-row" onclick="openPatientDetail(${p.id})">
-      <div class="td name">${p.nome}${p.origem==='ficha_ocr'?'<span style="margin-left:6px;font-size:9px;color:var(--accent2);font-family:var(--mono);opacity:.7">OCR</span>':''}</div>
+    <div class="table-row" onclick="openPatientDetail(${p.id})" style="${inativo?'opacity:0.45;':''}">
+      <div class="td name" style="${inativo?'text-decoration:line-through;color:var(--text3);':''}">
+        ${p.nome}${p.origem==='ficha_ocr'?'<span style="margin-left:6px;font-size:9px;color:var(--accent2);font-family:var(--mono);opacity:.7">OCR</span>':''}
+      </div>
       <div class="td">${p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):'-'}</div>
       <div class="td">${p.queixa||'-'}</div>
       <div class="td val">R$${(p.valor||160).toLocaleString('pt-BR')}</div>
@@ -1598,8 +1632,16 @@ function renderPatients(){
           <div style="display:flex;gap:2px">${diasBtns}</div>
         </div>
       </div>
-      <div class="td">
+      <div class="td" style="display:flex;align-items:center;gap:6px" onclick="event.stopPropagation()">
         <span class="paid-dot" style="background:${p.pago?'var(--green)':'var(--warn)'}"></span>
+        <button onclick="toggleAtivoStatus(${p.id})"
+          title="${inativo?'Reativar paciente':'Desativar paciente'}"
+          style="padding:3px 8px;border-radius:6px;border:1px solid ${inativo?'var(--warn)':'var(--border)'};
+          background:${inativo?'rgba(255,180,0,.12)':'transparent'};
+          color:${inativo?'var(--warn)':'var(--text3)'};
+          font-size:10px;font-family:var(--mono);cursor:pointer;transition:all .12s;white-space:nowrap">
+          ${inativo?'● Inativo':'○ Ativo'}
+        </button>
       </div>
     </div>`;
   }).join('');
@@ -2619,9 +2661,11 @@ function renderSchedule(){
   if(!el) return;
 
   const DIAS_LABEL = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  // Apenas pacientes ativos na grade
+  const pacientesAtivos = pacientes.filter(p=>p.ativo!==false);
   // Coletar todos os horários únicos
   const horarios = [...new Set(
-    pacientes.filter(p=>p.horario).map(p=>p.horario)
+    pacientesAtivos.filter(p=>p.horario).map(p=>p.horario)
   )].sort();
 
   if(horarios.length===0){
@@ -2633,9 +2677,9 @@ function renderSchedule(){
     return;
   }
 
-  // Quais dias têm pacientes?
+  // Quais dias têm pacientes ativos?
   const diasAtivos = [1,2,3,4,5,6,0].filter(d=>
-    pacientes.some(p=>(p.diasSemana||[]).includes(d))
+    pacientesAtivos.some(p=>(p.diasSemana||[]).includes(d))
   );
   if(diasAtivos.length===0) diasAtivos.push(1,2,3,4,5);
 
@@ -2653,7 +2697,7 @@ function renderSchedule(){
     const rowBg = hi%2===0 ? 'var(--bg2)' : 'var(--bg3)';
     html += `<div style="background:${rowBg};padding:10px 12px;font-family:var(--mono);font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);display:flex;align-items:center">${h}</div>`;
     diasAtivos.forEach(d=>{
-      const pacs = pacientes.filter(p=>p.horario===h && (p.diasSemana||[]).includes(d));
+      const pacs = pacientesAtivos.filter(p=>p.horario===h && (p.diasSemana||[]).includes(d));
       const ficha = p=>p.relatorio||p.diagnostico||p.plano ? '✓' : '';
       html += `<div style="background:${rowBg};padding:8px 10px;border-bottom:1px solid var(--border);border-left:1px solid var(--border)">
         ${pacs.length===0
