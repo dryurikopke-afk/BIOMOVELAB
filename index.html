@@ -143,7 +143,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column}
 
 /* ── GRID STATS ── */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-@media(max-width:800px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.stat-grid{grid-template-columns:repeat(2,1fr)}.dash-double{grid-template-columns:1fr!important}}
 @media(max-width:480px){.stat-grid{grid-template-columns:1fr}}
 .stat-card{
   background:var(--bg2);border:1px solid var(--border);border-radius:14px;
@@ -502,6 +502,7 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
           <label style="margin-left:4px">Worker URL:</label>
           <input type="text" class="api-input" id="worker-url-input" placeholder="https://seu-worker.workers.dev" oninput="saveWorkerUrl()" style="min-width:200px;flex:2">
           <button class="api-save-btn" onclick="saveApiKey();saveWorkerUrl();showToast('Configurações salvas!')">Salvar</button>
+          <button onclick="reloadFromFirestore()" title="Recarrega todos os dados direto do Firebase, ignorando cache local" style="padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:12px;font-family:var(--mono);cursor:pointer;white-space:nowrap">🔄 Recarregar Firebase</button>
         </div>
         <div class="stat-grid">
           <div class="stat-card">
@@ -553,6 +554,77 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
             <button class="cmd-submit" onclick="processarCmd()">Executar</button>
           </div>
           <div id="cmd-result" style="font-size:13px;color:var(--text2);font-family:var(--mono);min-height:18px"></div>
+        </div>
+
+        <!-- ROW: Aniversariantes + Agenda Consultório -->
+        <div class="dash-double" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+
+          <!-- ANIVERSARIANTES DO MÊS -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(255,170,0,.12);border:1px solid rgba(255,170,0,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M12 2v1M12 3a2 2 0 0 1 0 4"/></svg>
+              </div>
+              <span style="font-family:var(--display);font-weight:700;font-size:14px">Aniversariantes</span>
+              <span id="aniv-mes-badge" class="badge badge-ai" style="margin-left:auto;background:rgba(255,170,0,.12);color:var(--warn);border-color:rgba(255,170,0,.25)">...</span>
+            </div>
+            <div id="aniv-list" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto"></div>
+          </div>
+
+          <!-- AGENDA DO CONSULTÓRIO -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="width:32px;height:32px;border-radius:9px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <span style="font-family:var(--display);font-weight:700;font-size:14px">Agenda Consultório</span>
+              <button onclick="addAgendaEvento()" title="Adicionar evento"
+                style="margin-left:auto;width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:var(--accent-dim);color:var(--accent);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+            </div>
+            <div id="agenda-list" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto"></div>
+            <div id="agenda-empty" style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0;display:none">Nenhum compromisso agendado</div>
+          </div>
+
+        </div>
+
+        <!-- MODAL AGENDA -->
+        <div id="modal-agenda" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-agenda')">
+          <div class="modal-box" style="max-width:400px">
+            <div class="modal-header">
+              <span id="agenda-modal-title" class="modal-title">Novo Compromisso</span>
+              <button class="modal-close" onclick="closeModal('modal-agenda')">✕</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0 8px">
+              <div>
+                <label style="font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Título</label>
+                <input id="ag-titulo" type="text" placeholder="Ex: Reunião, Visita, Consulta..."
+                  style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;box-sizing:border-box">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Data</label>
+                  <input id="ag-data" type="date"
+                    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;box-sizing:border-box">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Horário</label>
+                  <input id="ag-hora" type="time"
+                    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;box-sizing:border-box">
+                </div>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Observações</label>
+                <textarea id="ag-obs" rows="2" placeholder="Detalhes opcionais..."
+                  style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:8px 10px;box-sizing:border-box;resize:vertical;font-family:var(--sans)"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+                <button onclick="closeModal('modal-agenda')"
+                  style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer">Cancelar</button>
+                <button onclick="salvarAgendaEvento()"
+                  style="padding:7px 18px;border-radius:8px;border:none;background:var(--accent2);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1407,6 +1479,35 @@ async function loadState(){
   renderDashboard(); renderPatients();
 }
 
+// Recarrega tudo do Firestore ignorando localStorage (recuperação de emergência)
+async function reloadFromFirestore(){
+  if(!db){ showToast('⚠ Firebase não conectado'); return; }
+  showSyncStatus('⏳ recarregando do Firebase…','warn');
+  try{
+    const doc = await db.collection('dados').doc('principal').get();
+    if(doc.exists){
+      const d = doc.data();
+      pacientes = d.pacientes||[];
+      pagamentos = d.pagamentos||[];
+      relatoriosCount = d.relatoriosCount||0;
+      showSyncStatus('✓ dados restaurados','ok');
+      showToast(`✓ ${pacientes.length} pacientes e ${pagamentos.length} pagamentos carregados do Firebase`);
+    } else {
+      showSyncStatus('! nenhum dado no Firebase','err');
+      showToast('⚠ Nenhum dado encontrado no Firebase (dados/principal)');
+    }
+  }catch(e){
+    showSyncStatus('! erro ao buscar','err');
+    showToast('Erro ao acessar Firebase: '+e.message);
+  }
+  // Recarrega agenda
+  try{
+    const snap = await db.collection('biomovelab').doc('agenda').get();
+    if(snap.exists && snap.data().eventos) agendaEventos = snap.data().eventos;
+  }catch(e){}
+  renderDashboard(); renderPatients(); renderSchedule();
+}
+
 function getApiKey(){
   return document.getElementById('api-key-input').value.trim()||
     (()=>{try{return localStorage.getItem('bml_api_key')||''}catch(e){return ''}})();
@@ -1444,7 +1545,14 @@ try{
 }catch(e){document.getElementById('worker-url-input').value=DEFAULT_WORKER_URL;}
 
 // Carrega dados do Firestore (ou localStorage como fallback)
-loadState();
+// Sequência correta: agenda local primeiro (cache), depois aguarda Firestore principal,
+// e só então carrega agenda do Firestore (evita race condition no renderDashboard)
+async function initApp(){
+  loadAgendaFromStorage(); // cache local imediato (sem bloquear)
+  await loadState();       // aguarda dados principais do Firestore
+  await loadAgendaFromFirestore(); // agenda do Firestore depois
+}
+initApp();
 
 // ============================================================
 // NAVIGATION
@@ -1510,6 +1618,209 @@ function renderDashboard(){
   document.getElementById('stat-recebido-sub').textContent=pags.length+' pagamento(s)';
   document.getElementById('stat-pendentes').textContent=pacientes.filter(p=>!p.pago).length;
   document.getElementById('stat-relatorios').textContent=relatoriosCount;
+  renderAniversariantes();
+  renderAgendaConsultorio();
+}
+
+// ============================================================
+// ANIVERSARIANTES DO MÊS
+// ============================================================
+function renderAniversariantes(){
+  const elList = document.getElementById('aniv-list');
+  const elBadge = document.getElementById('aniv-mes-badge');
+  if(!elList) return;
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth()+1; // 1-12
+  const diaHoje = hoje.getDate();
+  const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  const anivs = pacientes
+    .filter(p => p.nasc)
+    .map(p => {
+      const d = new Date(p.nasc + 'T12:00');
+      return { p, mes: d.getMonth()+1, dia: d.getDate() };
+    })
+    .filter(x => x.mes === mesAtual)
+    .sort((a,b) => a.dia - b.dia);
+
+  const nomeMes = MESES[mesAtual-1];
+  elBadge.textContent = anivs.length + ' em ' + nomeMes;
+
+  if(anivs.length === 0){
+    elList.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0">Nenhum aniversariante em ' + nomeMes + '</div>';
+    return;
+  }
+
+  elList.innerHTML = anivs.map(({p, dia}) => {
+    const isHoje = dia === diaHoje;
+    const jaFoi = dia < diaHoje;
+    const anoAtual = hoje.getFullYear();
+    const idade = anoAtual - new Date(p.nasc+'T12:00').getFullYear();
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;
+      background:${isHoje ? 'rgba(255,170,0,.1)' : 'var(--bg3)'};
+      border:1px solid ${isHoje ? 'rgba(255,170,0,.35)' : 'var(--border)'};
+      opacity:${jaFoi ? '.55' : '1'}">
+      <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:${isHoje?'var(--warn)':'var(--accent)'};min-width:28px;text-align:center;line-height:1">${dia}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome.split(' ').slice(0,2).join(' ')}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${idade} anos</div>
+      </div>
+      ${isHoje ? '<span style="font-size:14px" title="Hoje!">🎂</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// AGENDA DO CONSULTÓRIO
+// ============================================================
+let agendaEventos = [];
+let agendaEditId = null;
+
+function loadAgendaFromStorage(){
+  try { agendaEventos = JSON.parse(localStorage.getItem('bml_agenda')||'[]'); } catch(e){ agendaEventos=[]; }
+}
+
+function saveAgenda(){
+  try { localStorage.setItem('bml_agenda', JSON.stringify(agendaEventos)); } catch(e){}
+  // também salva no Firestore se disponível
+  if(db){
+    try{
+      db.collection('biomovelab').doc('agenda').set({ eventos: agendaEventos });
+    }catch(e){}
+  }
+}
+
+async function loadAgendaFromFirestore(){
+  if(!db) return;
+  try{
+    const snap = await db.collection('biomovelab').doc('agenda').get();
+    if(snap.exists && snap.data().eventos){
+      agendaEventos = snap.data().eventos;
+      try{ localStorage.setItem('bml_agenda', JSON.stringify(agendaEventos)); }catch(e){}
+    }
+  }catch(e){ loadAgendaFromStorage(); }
+}
+
+function renderAgendaConsultorio(){
+  const el = document.getElementById('agenda-list');
+  const empty = document.getElementById('agenda-empty');
+  if(!el) return;
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  // Remove eventos passados há mais de 7 dias automaticamente
+  const limite = new Date(hoje); limite.setDate(limite.getDate()-7);
+  agendaEventos = agendaEventos.filter(e => !e.data || new Date(e.data+'T00:00') >= limite);
+
+  const futuros = agendaEventos
+    .filter(e => !e.data || new Date(e.data+'T00:00') >= hoje)
+    .sort((a,b) => {
+      const da = a.data||'9999', db2 = b.data||'9999';
+      if(da!==db2) return da.localeCompare(db2);
+      return (a.hora||'').localeCompare(b.hora||'');
+    });
+
+  const passados = agendaEventos
+    .filter(e => e.data && new Date(e.data+'T00:00') < hoje)
+    .sort((a,b) => b.data.localeCompare(a.data));
+
+  const todos = [...futuros, ...passados];
+
+  if(todos.length===0){
+    el.innerHTML=''; empty.style.display='block'; return;
+  }
+  empty.style.display='none';
+
+  const DIAS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  el.innerHTML = todos.map(ev => {
+    let dataLabel = '', isPast = false;
+    if(ev.data){
+      const d = new Date(ev.data+'T12:00');
+      const diff = Math.floor((d - hoje)/(1000*60*60*24));
+      isPast = d < hoje;
+      if(diff===0) dataLabel='Hoje';
+      else if(diff===1) dataLabel='Amanhã';
+      else dataLabel = DIAS_PT[d.getDay()]+', '+d.getDate()+' '+MESES_PT[d.getMonth()];
+    }
+    return `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:9px;
+      background:${isPast?'transparent':'var(--bg3)'};
+      border:1px solid ${isPast?'rgba(61,79,112,.4)':'var(--border)'};
+      opacity:${isPast?'.5':'1'}">
+      <div style="min-width:36px;text-align:center;flex-shrink:0">
+        ${ev.data ? `<div style="font-family:var(--mono);font-size:10px;color:var(--accent2);font-weight:600;line-height:1.3">${dataLabel}</div>` : ''}
+        ${ev.hora ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text2)">${ev.hora}</div>` : ''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4">${ev.titulo}</div>
+        ${ev.obs ? `<div style="font-size:11px;color:var(--text3);margin-top:1px;line-height:1.3">${ev.obs}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button onclick="editAgendaEvento(${ev.id})" title="Editar"
+          style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">✏</button>
+        <button onclick="delAgendaEvento(${ev.id})" title="Excluir"
+          style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--red);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addAgendaEvento(){
+  agendaEditId = null;
+  document.getElementById('agenda-modal-title').textContent='Novo Compromisso';
+  document.getElementById('ag-titulo').value='';
+  document.getElementById('ag-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('ag-hora').value='';
+  document.getElementById('ag-obs').value='';
+  document.getElementById('modal-agenda').classList.add('open');
+  setTimeout(()=>document.getElementById('ag-titulo').focus(),100);
+}
+
+function editAgendaEvento(id){
+  const ev = agendaEventos.find(e=>e.id===id);
+  if(!ev) return;
+  agendaEditId = id;
+  document.getElementById('agenda-modal-title').textContent='Editar Compromisso';
+  document.getElementById('ag-titulo').value=ev.titulo||'';
+  document.getElementById('ag-data').value=ev.data||'';
+  document.getElementById('ag-hora').value=ev.hora||'';
+  document.getElementById('ag-obs').value=ev.obs||'';
+  document.getElementById('modal-agenda').classList.add('open');
+  setTimeout(()=>document.getElementById('ag-titulo').focus(),100);
+}
+
+function salvarAgendaEvento(){
+  const titulo = document.getElementById('ag-titulo').value.trim();
+  if(!titulo){ document.getElementById('ag-titulo').style.borderColor='var(--red)'; return; }
+  document.getElementById('ag-titulo').style.borderColor='';
+  const ev = {
+    id: agendaEditId || Date.now(),
+    titulo,
+    data: document.getElementById('ag-data').value,
+    hora: document.getElementById('ag-hora').value,
+    obs: document.getElementById('ag-obs').value.trim()
+  };
+  if(agendaEditId){
+    const idx = agendaEventos.findIndex(e=>e.id===agendaEditId);
+    if(idx>=0) agendaEventos[idx]=ev;
+  } else {
+    agendaEventos.push(ev);
+  }
+  saveAgenda();
+  closeModal('modal-agenda');
+  renderAgendaConsultorio();
+  showToast(agendaEditId ? 'Compromisso atualizado!' : 'Compromisso adicionado!');
+}
+
+function delAgendaEvento(id){
+  agendaEventos = agendaEventos.filter(e=>e.id!==id);
+  saveAgenda();
+  renderAgendaConsultorio();
+  showToast('Compromisso removido');
 }
 
 // ============================================================
