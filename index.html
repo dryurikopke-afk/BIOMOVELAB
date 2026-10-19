@@ -1325,6 +1325,19 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
         <button class="btn btn-sm" style="border-color:rgba(255,71,87,.3);color:var(--red);flex-shrink:0" onclick="event.stopPropagation();exportPDF()">Gerar</button>
       </div>
 
+      <!-- IMPORTAR JSON -->
+      <div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.3);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,170,0,.15);border:1px solid rgba(255,170,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🔄</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px;margin-bottom:2px">Restaurar Backup (JSON)</div>
+          <div style="font-size:12px;color:var(--text2)">Importa um arquivo .json salvo anteriormente e restaura no Firebase.</div>
+        </div>
+        <label style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,170,0,.5);color:var(--warn);font-size:12px;font-family:var(--mono);cursor:pointer;white-space:nowrap;background:transparent">
+          Importar
+          <input type="file" accept=".json" style="display:none" onchange="importBackupFile(this)">
+        </label>
+      </div>
+
       <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">
         💡 Faça backup regularmente para garantir a segurança dos seus dados
       </div>
@@ -3073,6 +3086,36 @@ function exportJSON(){
   const filename = `biomovelab-backup-${new Date().toISOString().slice(0,10)}.json`;
   triggerDownload(JSON.stringify(data, null, 2), filename, 'application/json');
   showToast('✓ Backup JSON baixado!');
+}
+
+function importBackupFile(input){
+  const file = input.files[0];
+  if(!file){ return; }
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.pacientes && !data.pagamentos){
+        showToast('⚠ Arquivo inválido: não é um backup BioMoveLab'); return;
+      }
+      const np = (data.pacientes||[]).length;
+      const npag = (data.pagamentos||[]).length;
+      const ok = confirm(`Restaurar backup de ${data.exportedAt||'data desconhecida'}?\n\n${np} pacientes e ${npag} pagamentos serão carregados e salvos no Firebase.\n\nOs dados atuais serão substituídos.`);
+      if(!ok){ input.value=''; return; }
+      pacientes = data.pacientes||[];
+      pagamentos = data.pagamentos||[];
+      relatoriosCount = data.relatoriosCount||0;
+      closeModal('modal-export');
+      showSyncStatus('⏳ restaurando no Firebase…','warn');
+      await saveState();
+      showToast(`✓ ${np} pacientes restaurados com sucesso!`);
+      renderDashboard(); renderPatients(); renderSchedule();
+    }catch(err){
+      showToast('Erro ao ler arquivo: '+err.message);
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
 }
 
 function exportCSV(){
