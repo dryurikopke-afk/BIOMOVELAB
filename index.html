@@ -1350,10 +1350,12 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.5}
             <svg id="anamnese-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div id="anamnese-rec-panel" style="display:none;padding:16px 14px;background:var(--bg2);border-top:1px solid var(--border)">
-            <!-- Visualizador de áudio -->
+            <!-- Indicador de gravação -->
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-              <canvas id="anamnese-waveform" width="260" height="40"
-                style="flex:1;border-radius:8px;background:var(--bg3);border:1px solid var(--border)"></canvas>
+              <div id="anamnese-rec-indicator" style="flex:1;border-radius:8px;background:var(--bg3);border:1px solid var(--border);height:40px;display:flex;align-items:center;padding:0 14px;gap:8px">
+                <div id="anamnese-rec-dot" style="width:8px;height:8px;border-radius:50%;background:var(--border2);transition:background .3s"></div>
+                <span id="anamnese-rec-label" style="font-size:12px;color:var(--text3);font-family:var(--mono)">Pronto para gravar</span>
+              </div>
               <div id="anamnese-timer" style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text);min-width:52px;text-align:right">0:00</div>
             </div>
             <!-- Botões de controle -->
@@ -2190,15 +2192,13 @@ document.getElementById('login-pwd').addEventListener('keydown', e => {
 });
 
 // ============================================================
-// GRAVAÇÃO DE ANAMNESE POR VOZ
+// GRAVAÇÃO DE ANAMNESE POR VOZ (Web Speech API)
 // ============================================================
-let anamneseMediaRecorder = null;
-let anamneseChunks = [];
-let anamneseAudioBlob = null;
+let anamneseRecognition = null;
+let anamneseTranscriptText = '';
 let anamneseTimerInterval = null;
 let anamneseSeconds = 0;
-let anamneseAnimFrame = null;
-let anamneseAnalyser = null;
+let anamneseIsRecording = false;
 
 function toggleAnamneseRec(){
   const panel = document.getElementById('anamnese-rec-panel');
@@ -2221,88 +2221,108 @@ function anamneseUpdateTimer(){
   if(el) el.textContent = `${m}:${s}`;
 }
 
-function anamneseDrawWaveform(analyser){
-  const canvas = document.getElementById('anamnese-waveform');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const bufLen = analyser.frequencyBinCount;
-  const data = new Uint8Array(bufLen);
-
-  function draw(){
-    anamneseAnimFrame = requestAnimationFrame(draw);
-    analyser.getByteTimeDomainData(data);
-    ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle = '#FF4757';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    const sliceW = W/bufLen;
-    let x = 0;
-    for(let i=0;i<bufLen;i++){
-      const v = data[i]/128;
-      const y = v*H/2;
-      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-      x+=sliceW;
-    }
-    ctx.stroke();
-  }
-  draw();
-}
-
 async function anamneseStartRec(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    // Waveform
-    const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    const source = audioCtx.createMediaStreamSource(stream);
-    anamneseAnalyser = audioCtx.createAnalyser();
-    anamneseAnalyser.fftSize = 512;
-    source.connect(anamneseAnalyser);
-    anamneseDrawWaveform(anamneseAnalyser);
-
-    anamneseChunks = [];
-    anamneseAudioBlob = null;
-    anamneseSeconds = 0;
-    document.getElementById('anamnese-timer').textContent = '0:00';
-
-    anamneseMediaRecorder = new MediaRecorder(stream);
-    anamneseMediaRecorder.ondataavailable = e => { if(e.data.size>0) anamneseChunks.push(e.data); };
-    anamneseMediaRecorder.onstop = () => {
-      anamneseAudioBlob = new Blob(anamneseChunks, {type:'audio/webm'});
-      stream.getTracks().forEach(t=>t.stop());
-      cancelAnimationFrame(anamneseAnimFrame);
-      // Limpa waveform
-      const canvas = document.getElementById('anamnese-waveform');
-      if(canvas){ const c=canvas.getContext('2d'); c.clearRect(0,0,canvas.width,canvas.height); }
-      // Mostra botões
-      document.getElementById('btn-rec-stop').style.display='none';
-      document.getElementById('btn-rec-transcribe').style.display='flex';
-      document.getElementById('btn-rec-clear').style.display='block';
-      anamneseSetStatus(`✓ Gravação de ${document.getElementById('anamnese-timer').textContent} pronta — clique em "Preencher com IA"`, 'var(--green)');
-    };
-    anamneseMediaRecorder.start();
-    anamneseTimerInterval = setInterval(anamneseUpdateTimer, 1000);
-
-    document.getElementById('btn-rec-start').style.display='none';
-    document.getElementById('btn-rec-stop').style.display='flex';
-    document.getElementById('btn-rec-transcribe').style.display='none';
-    document.getElementById('btn-rec-clear').style.display='none';
-    anamneseSetStatus('● Gravando…', 'var(--red)');
-  }catch(err){
-    anamneseSetStatus('Erro ao acessar microfone: '+err.message, 'var(--red)');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    anamneseSetStatus('Seu browser não suporta reconhecimento de voz. Use Chrome.', 'var(--red)');
+    return;
   }
+  anamneseTranscriptText = '';
+  anamneseSeconds = 0;
+  document.getElementById('anamnese-timer').textContent = '0:00';
+  // Limpa campo de transcrição ao vivo
+  const liveEl = document.getElementById('anamnese-transcript');
+  if(liveEl) liveEl.textContent = '';
+  document.getElementById('anamnese-transcript-wrap').style.display='none';
+
+  anamneseRecognition = new SpeechRecognition();
+  anamneseRecognition.lang = 'pt-BR';
+  anamneseRecognition.continuous = true;
+  anamneseRecognition.interimResults = true;
+  anamneseRecognition.maxAlternatives = 1;
+
+  let interimText = '';
+  anamneseRecognition.onresult = (e) => {
+    let final = '';
+    interimText = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal){
+        final += e.results[i][0].transcript + ' ';
+      } else {
+        interimText += e.results[i][0].transcript;
+      }
+    }
+    if(final) anamneseTranscriptText += final;
+    // Mostra transcrição ao vivo no campo
+    const liveEl = document.getElementById('anamnese-transcript');
+    if(liveEl){
+      liveEl.textContent = anamneseTranscriptText + interimText;
+      document.getElementById('anamnese-transcript-wrap').style.display = 'block';
+    }
+  };
+
+  anamneseRecognition.onerror = (e) => {
+    if(e.error !== 'no-speech'){
+      anamneseSetStatus('Erro no reconhecimento: ' + e.error, 'var(--red)');
+    }
+  };
+
+  anamneseRecognition.onend = () => {
+    // Reinicia automaticamente se ainda estiver gravando (Chrome para após silêncio)
+    if(anamneseIsRecording){
+      try{ anamneseRecognition.start(); }catch(e){}
+    }
+  };
+
+  anamneseRecognition.start();
+  anamneseIsRecording = true;
+  anamneseTimerInterval = setInterval(anamneseUpdateTimer, 1000);
+
+  // Anima indicador
+  const dot = document.getElementById('anamnese-rec-dot');
+  const lbl = document.getElementById('anamnese-rec-label');
+  if(dot){ dot.style.background='#FF4757'; dot.style.animation='blink 1s infinite'; }
+  if(lbl) lbl.textContent = '● Gravando… fale normalmente';
+
+  document.getElementById('btn-rec-start').style.display='none';
+  document.getElementById('btn-rec-stop').style.display='flex';
+  document.getElementById('btn-rec-transcribe').style.display='none';
+  document.getElementById('btn-rec-clear').style.display='none';
+  anamneseSetStatus('Fale claramente — transcrição em tempo real', 'var(--warn)');
 }
 
 function anamneseStopRec(){
-  if(anamneseMediaRecorder && anamneseMediaRecorder.state!=='inactive'){
-    anamneseMediaRecorder.stop();
-    clearInterval(anamneseTimerInterval);
+  anamneseIsRecording = false;
+  if(anamneseRecognition){
+    try{ anamneseRecognition.stop(); }catch(e){}
+    anamneseRecognition = null;
+  }
+  clearInterval(anamneseTimerInterval);
+
+  // Para indicador
+  const dot2 = document.getElementById('anamnese-rec-dot');
+  const lbl2 = document.getElementById('anamnese-rec-label');
+  if(dot2){ dot2.style.background='var(--border2)'; dot2.style.animation='none'; }
+
+  document.getElementById('btn-rec-stop').style.display='none';
+  if(anamneseTranscriptText.trim()){
+    if(lbl2) lbl2.textContent = '✓ Transcrição pronta';
+    if(dot2) dot2.style.background = 'var(--green)';
+    document.getElementById('btn-rec-transcribe').style.display='flex';
+    document.getElementById('btn-rec-clear').style.display='block';
+    anamneseSetStatus(`✓ Transcrição de ${document.getElementById('anamnese-timer').textContent} pronta — clique em "Preencher com IA"`, 'var(--green)');
+  } else {
+    if(lbl2) lbl2.textContent = 'Pronto para gravar';
+    document.getElementById('btn-rec-start').style.display='flex';
+    anamneseSetStatus('Nenhuma fala detectada. Tente novamente.', 'var(--warn)');
   }
 }
 
 function anamneseClear(){
-  anamneseAudioBlob = null;
-  anamneseChunks = [];
+  anamneseIsRecording = false;
+  anamneseTranscriptText = '';
+  if(anamneseRecognition){ try{ anamneseRecognition.stop(); }catch(e){} anamneseRecognition = null; }
+  clearInterval(anamneseTimerInterval);
   document.getElementById('btn-rec-start').style.display='flex';
   document.getElementById('btn-rec-stop').style.display='none';
   document.getElementById('btn-rec-transcribe').style.display='none';
@@ -2310,39 +2330,36 @@ function anamneseClear(){
   document.getElementById('anamnese-transcript-wrap').style.display='none';
   document.getElementById('anamnese-transcript').textContent='';
   document.getElementById('anamnese-timer').textContent='0:00';
-  const canvas = document.getElementById('anamnese-waveform');
-  if(canvas){ const c=canvas.getContext('2d'); c.clearRect(0,0,canvas.width,canvas.height); }
+  const dot3 = document.getElementById('anamnese-rec-dot');
+  const lbl3 = document.getElementById('anamnese-rec-label');
+  if(dot3){ dot3.style.background='var(--border2)'; dot3.style.animation='none'; }
+  if(lbl3) lbl3.textContent = 'Pronto para gravar';
   anamneseSetStatus('');
 }
 
 async function anamneseTranscribe(){
-  if(!anamneseAudioBlob){ anamneseSetStatus('Nenhuma gravação disponível.','var(--red)'); return; }
+  if(!anamneseTranscriptText.trim()){ anamneseSetStatus('Nenhuma transcrição disponível.','var(--red)'); return; }
   const apiKey = getApiKey();
   if(!apiKey){ anamneseSetStatus('Configure a chave API primeiro.','var(--warn)'); return; }
 
   const btn = document.getElementById('btn-rec-transcribe');
   btn.disabled = true;
   btn.textContent = '⏳ Processando…';
-  anamneseSetStatus('Enviando áudio para transcrição…', 'var(--warn)');
+  anamneseSetStatus('Analisando transcrição com IA…', 'var(--warn)');
 
   try{
-    // Converte blob para base64
-    const arrayBuf = await anamneseAudioBlob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuf);
-    let binary = '';
-    for(let i=0;i<uint8.length;i++) binary += String.fromCharCode(uint8[i]);
-    const b64 = btoa(binary);
-
     const {url, headers} = anthropicFetchParams(apiKey);
     const payload = {
       model: 'claude-opus-4-5',
       max_tokens: 1500,
       messages:[{
         role:'user',
-        content:[
-          {
-            type:'text',
-            text:`Você é um assistente clínico especializado em fisioterapia. Analise este áudio de uma anamnese clínica e extraia as informações a seguir em JSON puro (sem markdown, sem explicações).
+        content:`Você é um assistente clínico especializado em fisioterapia. Analise esta transcrição de uma anamnese clínica e extraia as informações a seguir em JSON puro (sem markdown, sem explicações).
+
+Transcrição:
+"""
+${anamneseTranscriptText.trim()}
+"""
 
 Retorne APENAS este JSON:
 {
@@ -2352,23 +2369,14 @@ Retorne APENAS este JSON:
   "diagnostico": "hipótese diagnóstica mencionada pelo profissional",
   "plano": "plano de tratamento mencionado",
   "obs": "outras observações clínicas relevantes",
-  "transcricao": "transcrição completa do áudio"
+  "transcricao": "${anamneseTranscriptText.trim().replace(/"/g,"'")}"
 }`
-          },
-          {
-            type:'document',
-            source:{
-              type:'base64',
-              media_type: anamneseAudioBlob.type || 'audio/webm',
-              data: b64
-            }
-          }
-        ]
       }]
     };
 
     const resp = await fetch(url, {method:'POST', headers, body: JSON.stringify(payload)});
     const json = await resp.json();
+    if(json.error) throw new Error(json.error.message || 'Erro da API');
     const text = json.content?.[0]?.text || '';
 
     // Extrai JSON da resposta
@@ -2498,11 +2506,22 @@ function renderAniversariantes(){
   const diaHoje = hoje.getDate();
   const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
+  // Normaliza data de nascimento: aceita p.nasc (AAAA-MM-DD) ou p.nascimento (DD/MM/AAAA)
+  function getNasc(p){
+    if(p.nasc && p.nasc.match(/^\d{4}-\d{2}-\d{2}$/)) return p.nasc;
+    if(p.nascimento && p.nascimento.match(/^\d{2}\/\d{2}\/\d{4}$/)){
+      const [d,m,a] = p.nascimento.split('/');
+      return `${a}-${m}-${d}`;
+    }
+    return null;
+  }
+
   const anivs = pacientes
-    .filter(p => p.nasc)
-    .map(p => {
-      const d = new Date(p.nasc + 'T12:00');
-      return { p, mes: d.getMonth()+1, dia: d.getDate() };
+    .map(p => ({ p, nasc: getNasc(p) }))
+    .filter(x => x.nasc)
+    .map(({p, nasc}) => {
+      const d = new Date(nasc + 'T12:00');
+      return { p, mes: d.getMonth()+1, dia: d.getDate(), nasc };
     })
     .filter(x => x.mes === mesAtual)
     .sort((a,b) => a.dia - b.dia);
@@ -2515,11 +2534,11 @@ function renderAniversariantes(){
     return;
   }
 
-  elList.innerHTML = anivs.map(({p, dia}) => {
+  elList.innerHTML = anivs.map(({p, dia, nasc}) => {
     const isHoje = dia === diaHoje;
     const jaFoi = dia < diaHoje;
     const anoAtual = hoje.getFullYear();
-    const idade = anoAtual - new Date(p.nasc+'T12:00').getFullYear();
+    const idade = anoAtual - new Date(nasc+'T12:00').getFullYear();
     return `
     <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;
       background:${isHoje ? 'rgba(255,170,0,.1)' : 'var(--bg3)'};
@@ -4022,7 +4041,7 @@ function importBackupFile(input){
 function exportCSV(){
   const cols = ['Nome','Nascimento','CPF','Telefone','Email','CEP','Endereço','Bairro','Cidade','UF','Queixa','Diagnóstico','Plano','Valor (R$)','Vencimento','Pago','Observações','Relatório IA'];
   const rows = pacientes.map(p=>[
-    p.nome||'', p.nascimento||'', p.cpf||'', p.telefone||'', p.email||'',
+    p.nome||'', p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):(p.nascimento||''), p.cpf||'', p.telefone||'', p.email||'',
     p.cep||'', p.endereco||'', p.bairro||'', p.cidade||'', p.uf||'',
     p.queixa||'', p.diagnostico||'', p.plano||'',
     p.valor||'', p.venc||'', p.pago?'Sim':'Não',
@@ -4042,7 +4061,7 @@ function exportPDF(){
     <tr style="page-break-inside:avoid">
       <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top">
         <strong>${i+1}. ${p.nome||'—'}</strong><br>
-        <span style="font-size:11px;color:#666">Nasc: ${p.nascimento||'—'} &nbsp;|&nbsp; Tel: ${p.telefone||'—'}</span>
+        <span style="font-size:11px;color:#666">Nasc: ${p.nasc?new Date(p.nasc+'T12:00').toLocaleDateString('pt-BR'):(p.nascimento||'—')} &nbsp;|&nbsp; Tel: ${p.telefone||'—'}</span>
       </td>
       <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;vertical-align:top;font-size:12px">
         ${p.queixa||'—'}
