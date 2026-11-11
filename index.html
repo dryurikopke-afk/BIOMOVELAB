@@ -4455,7 +4455,7 @@ function bkInit(){
   const NEED = { ombro:s=>[s.hip,s.sh,s.el], cotovelo:s=>[s.sh,s.el,s.wr], quadril:s=>[s.sh,s.hip,s.kn], joelho:s=>[s.hip,s.kn,s.an], tornozelo:s=>[s.kn,s.an,s.heel,s.toe], fppa:s=>[s.hip,s.kn,s.an] };
   const NEED_C = { tronco:["CS","CP"], pelve:[23,24], escap:[11,12] };
   function metricShown(m){ if (m.base==="cabeca") return (shown(7)&&shown(11))||(shown(8)&&shown(12)); if (m.side==="C") return NEED_C[m.base].every(shown); return NEED[m.base](SIDE[m.side]).every(shown); }
-  function sidesOf(b){ return b.bilateral ? ["E","D"].filter(s=>metricShown(METRICS.find(m=>m.key===`${b.base}_${s}`))) : (metricShown(METRICS.find(m=>m.key===b.base))?["C"):[]); }
+  function sidesOf(b){ return b.bilateral ? ["E","D"].filter(s=>metricShown(METRICS.find(m=>m.key===`${b.base}_${s}`))) : (metricShown(METRICS.find(m=>m.key===b.base))?["C"]:[]);}
   function saveHidden(){ try { localStorage.setItem("biomek.hidden",JSON.stringify([...bkHidden])); } catch {} }
   function buildPointsUI(){
     const pos = Object.fromEntries(POINTS.map(p=>[p[0],p]));
